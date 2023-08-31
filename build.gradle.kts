@@ -58,6 +58,7 @@ val shade: Configuration by configurations.creating {
 }
 
 dependencies {
+    compileOnly(libs.objc)
     if (platform.isFabric) {
         modImplementation(libs.yacl.fabric)
         modImplementation(libs.modMenu)
@@ -66,7 +67,6 @@ dependencies {
         modImplementation(libs.yacl.forge)
         modRuntimeOnly(libs.devAuth.forge)
     }
-    modCompileOnly("maven.modrinth:immediatelyfast:1.2.0+1.20.1")
 }
 
 tasks.processResources {

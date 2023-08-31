@@ -2,6 +2,7 @@ package dev.dediamondpro.chatshot.util;
 
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
+import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
@@ -68,13 +69,20 @@ public class ChatCopyUtil {
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
             BufferedImage transparentImage = imageToBufferedImage(makeColorTransparent(image, new Color(0x36, 0x39, 0x3F)));
-            if (Config.INSTANCE.saveImage) {
+            boolean copySuccessfull = false;
+            if (Config.INSTANCE.saveImage || MinecraftClient.IS_SYSTEM_MAC) {
                 File screenShotDir = new File("screenshots/chat");
                 screenShotDir.mkdirs();
-                ImageIO.write(transparentImage, "png", getScreenshotFilename(screenShotDir));
+                File screenshotFile = getScreenshotFilename(screenShotDir);
+                ImageIO.write(transparentImage, "png", screenshotFile);
+                if (MinecraftClient.IS_SYSTEM_MAC) {
+                    copySuccessfull = MacOSCompat.doCopyMacOS(screenshotFile.getAbsolutePath());
+                    if (!Config.INSTANCE.saveImage) screenshotFile.delete();
+                }
             }
+            if (!MinecraftClient.IS_SYSTEM_MAC) copySuccessfull = ClipboardUtil.copy(transparentImage);
             Text message = null;
-            if (ClipboardUtil.copy(transparentImage)) {
+            if (copySuccessfull) {
                 if (Config.INSTANCE.showCopyMessage) message = Text.translatable("chatshot.image.success");
             } else {
                 message = Text.translatable("chatshot.image.fail");
