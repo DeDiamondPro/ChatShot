@@ -1,6 +1,5 @@
 package dev.dediamondpro.chatshot.util;
 
-import dev.dediamondpro.chatshot.compat.CompatHandler;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import net.minecraft.client.MinecraftClient;
@@ -10,6 +9,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
+import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
@@ -39,6 +39,9 @@ public class ChatCopyUtil {
             line.content().accept(visitor);
         }
         client.keyboard.setClipboard(visitor.collect());
+        if (Config.INSTANCE.showCopyMessage) {
+            client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.text.success"));
+        }
     }
 
     public static void copyImage(List<ChatHudLine.Visible> lines, MinecraftClient client) {
@@ -52,7 +55,6 @@ public class ChatCopyUtil {
         }
         int height = lines.size() * 9;
 
-        CompatHandler.beforeScreenShot();
         Framebuffer fb = createBuffer(width * scaleFactor, height * scaleFactor);
         context.getMatrices().scale((float) client.getWindow().getScaledWidth() / width, (float) client.getWindow().getScaledHeight() / height, 1f);
         fb.beginWrite(false);
@@ -71,12 +73,17 @@ public class ChatCopyUtil {
                 screenShotDir.mkdirs();
                 ImageIO.write(transparentImage, "png", getScreenshotFilename(screenShotDir));
             }
-            ClipboardUtil.copy(transparentImage);
+            Text message = null;
+            if (ClipboardUtil.copy(transparentImage)) {
+                if (Config.INSTANCE.showCopyMessage) message = Text.translatable("chatshot.image.success");
+            } else {
+                message = Text.translatable("chatshot.image.fail");
+            }
+            if (message != null) client.inGameHud.getChatHud().addMessage(message);
         } catch (IOException e) {
             e.printStackTrace();
         }
         client.getFramebuffer().beginWrite(true);
-        CompatHandler.afterScreenShot();
     }
 
     private static File getScreenshotFilename(File directory) {

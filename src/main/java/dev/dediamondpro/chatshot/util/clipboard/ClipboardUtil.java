@@ -9,16 +9,18 @@ import java.awt.image.BufferedImage;
 
 public class ClipboardUtil {
 
-    public static void copy(BufferedImage img) {
-        copy(new TransferableImage(img));
+    public static boolean copy(BufferedImage img) {
+        return copy(new TransferableImage(img));
     }
 
-    public static void copy(Transferable transferable) {
-        if (MinecraftClient.IS_SYSTEM_MAC) return;
+    public static boolean copy(Transferable transferable) {
+        if (MinecraftClient.IS_SYSTEM_MAC) return false;
         try {
             Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
             c.setContents(transferable, null);
+            return true;
         } catch (Exception ignored) {
+            return false;
         }
     }
 }

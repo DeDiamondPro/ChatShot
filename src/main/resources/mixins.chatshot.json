@@ -4,7 +4,8 @@
   "minVersion": "0.7",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "ChatHudMixin",
+    "ChatHudAccessor",
+    "ChatScreenMixin",
     "DrawContextMixin",
     "MainMixin"
   ]

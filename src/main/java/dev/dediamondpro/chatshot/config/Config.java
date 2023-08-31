@@ -25,6 +25,8 @@ public class Config {
 
     public boolean saveImage = true;
 
+    public boolean showCopyMessage = true;
+
     public enum CopyType {
         @SerializedName("0")
         TEXT,
