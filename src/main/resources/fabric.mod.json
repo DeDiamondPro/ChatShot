@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "${id}",
+  "name": "${name}",
+  "version": "${version}",
+  "description": "Copy chat messages as text or a nice transparent image with one click.",
+  "authors": [
+    "DeDiamondPro"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/resourcify",
+    "sources": "https://github.com/DeDiamondPro/ChatShot",
+    "issues": "https://github.com/DeDiamondPro/ChatShot/issues"
+  },
+  "entrypoints": {
+    "modmenu": ["dev.dediamondpro.chatshot.config.ModMenuIntegration"]
+  },
+  "mixins": [
+    "mixins.${id}.json"
+  ],
+  "custom": {
+    "modmenu": {
+      "links": {
+        "modmenu.discord": "https://discord.gg/XtAuqsJWby"
+      }
+    }
+  },
+  "license": "LGPL",
+  "environment": "client",
+  "depends": {
+    "fabricloader": ">=0.12.0",
+    "minecraft": "${mcVersionStr}",
+    "java": ">=${java}"
+  },
+  "recommends": {
+    "yet_another_config_lib_v3": "*",
+    "modmenu": "*"
+  },
+  "breaks": {
+    "immediatelyfast": "<1.2.0"
+  }
+}
