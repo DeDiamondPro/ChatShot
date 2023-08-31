@@ -39,14 +39,20 @@ public abstract class ChatScreenMixin extends Screen {
     private void drawLineButton(DrawContext context, int mouseX, int mouseY) {
         double chatLineY = getChatHudA().toChatLineYA(mouseY);
         int index = getChatHudA().getMessageIndexA(0, chatLineY);
-        int buttonX = getChatHud().getWidth() + 14;
+        float chatScale = (float) getChatHud().getChatScale();
+        int buttonX = (int) (getChatHud().getWidth() + 14 * chatScale);
         if (index == -1 || mouseX > buttonX + 14) return;
         int lineHeight = getChatHudA().getLineHeightA();
-        int buttonY = height - ((int) chatLineY + 1) * lineHeight - 40;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 9;
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
-        context.fill(buttonX, buttonY, buttonX + 9, buttonY + 9, hovering ? 0xFFFFFF + color : color);
-        context.drawTexture(Textures.COPY, buttonX, buttonY, 0, 0, 9, 9, 9, 9);
+
+        context.getMatrices().push();
+        context.getMatrices().scale(chatScale, chatScale, 1f);
+        int scaledButtonX = (int) (getChatHud().getWidth() / chatScale + 14);
+        int scaledButtonY = (int) ((height - 40) / chatScale - ((int) chatLineY + 1) * lineHeight);
+        context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF + color : color);
+        context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
+        context.getMatrices().pop();
 
         if (hovering && Config.INSTANCE.tooltip) {
             ArrayList<Text> tooltip = new ArrayList<>();
