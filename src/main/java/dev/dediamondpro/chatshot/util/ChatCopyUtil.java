@@ -53,8 +53,9 @@ public class ChatCopyUtil {
         int height = lines.size() * 9;
 
         CompatHandler.beforeScreenShot();
-        Framebuffer fb = createBuffer(context.getScaledWindowWidth() * scaleFactor, context.getScaledWindowHeight() * scaleFactor);
-        fb.beginWrite(true);
+        Framebuffer fb = createBuffer(width * scaleFactor, height * scaleFactor);
+        context.getMatrices().scale((float) client.getWindow().getScaledWidth() / width, (float) client.getWindow().getScaledHeight() / height, 1f);
+        fb.beginWrite(false);
         int y = 0;
         for (ChatHudLine.Visible line : lines) {
             context.drawText(client.textRenderer, line.content(), 0, y, 0xFFFFFF, shadow);
@@ -62,9 +63,8 @@ public class ChatCopyUtil {
         }
         fb.endWrite();
 
-        try (NativeImage image1 = ScreenshotRecorder.takeScreenshot(fb); NativeImage image2 = new NativeImage(width * scaleFactor, height * scaleFactor, false)) {
-            image1.copyRect(image2, 0, 0, 0, 0, width * scaleFactor, height * scaleFactor, false, false);
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(image2.getBytes()));
+        try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
             BufferedImage transparentImage = imageToBufferedImage(makeColorTransparent(image, new Color(0x36, 0x39, 0x3F)));
             if (Config.INSTANCE.saveImage) {
                 File screenShotDir = new File("screenshots/chat");

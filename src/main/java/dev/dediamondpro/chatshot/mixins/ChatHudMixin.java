@@ -84,6 +84,7 @@ public abstract class ChatHudMixin {
             context.drawTooltip(this.client.textRenderer, tooltip, mouseX, mouseY);
         }
         if (hovering && this.mousePressed) {
+            context.draw(); // Make sure the current context has drawn everything before we start messing with frameBuffers
             int index = getMessageIndex(0, toChatLineY(mouseY));
             if (index == -1) return;
             ArrayList<ChatHudLine.Visible> messageParts = new ArrayList<>();

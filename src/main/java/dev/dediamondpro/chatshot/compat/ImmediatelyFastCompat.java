@@ -10,6 +10,7 @@ public class ImmediatelyFastCompat implements ICompat {
 
     @Override
     public void beforeScreenshot() {
+        // Without ending batching our text gets rendered on the main framebuffer instead of on our own
         isBatching = batching.isHudBatching();
         if (isBatching) batching.endHudBatching();
     }
