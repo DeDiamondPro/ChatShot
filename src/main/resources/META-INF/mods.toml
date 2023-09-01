@@ -9,7 +9,7 @@ version="${version}"
 displayName="ChatShot"
 authors="DeDiamondPro"
 description="Copy chat messages as text or a nice transparent image with one click."
-logoFile="icon.png"
+logoFile="ChatShot-128x.png"
 
 [[dependencies.chatshot]]
 modId="minecraft"

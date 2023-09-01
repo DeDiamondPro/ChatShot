@@ -25,6 +25,7 @@
       }
     }
   },
+  "icon": "ChatShot-128x.png",
   "license": "LGPL",
   "environment": "client",
   "depends": {

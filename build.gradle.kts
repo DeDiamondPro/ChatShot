@@ -1,3 +1,7 @@
+import com.matthewprenger.cursegradle.CurseArtifact
+import com.matthewprenger.cursegradle.CurseProject
+import com.matthewprenger.cursegradle.CurseRelation
+import com.matthewprenger.cursegradle.Options
 import gg.essential.gradle.util.noServerRunConfigs
 
 plugins {
@@ -144,10 +148,9 @@ tasks {
         into("${project.rootDir}/jars")
     }
     clean { delete("${project.rootDir}/jars") }
-    // TODO: add publishing info
-    /*project.modrinth {
+    project.modrinth {
         token.set(System.getenv("MODRINTH_TOKEN"))
-        projectId.set()
+        projectId.set("chatshot")
         versionNumber.set(mod_version)
         versionName.set("[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version")
         uploadFile.set(remapJar.get().archiveFile as Any)
@@ -156,16 +159,18 @@ tasks {
         changelog.set(file("../../changelog.md").readText())
         dependencies {
             if (platform.isFabric) required.project("fabric-api")
+            required.project("yacl")
         }
     }
     project.curseforge {
         project(closureOf<CurseProject> {
             apiKey = System.getenv("CURSEFORGE_TOKEN")
-            id = ""
+            id = "908966"
             changelog = file("../../changelog.md")
             changelogType = "markdown"
             relations(closureOf<CurseRelation> {
                 if (platform.isFabric) requiredDependency("fabric-api")
+                requiredDependency("yacl")
             })
             gameVersionStrings.addAll(getMcVersionList())
             addGameVersion(platform.loaderStr.replaceFirstChar { it.titlecase() })
@@ -183,7 +188,7 @@ tasks {
     register("publish") {
         dependsOn(modrinth)
         dependsOn(curseforge)
-    }*/
+    }
 }
 
 fun getMcVersionStr(): String {
