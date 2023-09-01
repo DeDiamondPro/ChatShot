@@ -1,0 +1,1 @@
+The very first release of ChatShot
