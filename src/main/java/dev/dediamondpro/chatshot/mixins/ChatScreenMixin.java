@@ -1,5 +1,6 @@
 package dev.dediamondpro.chatshot.mixins;
 
+import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.ChatCopyUtil;
 import dev.dediamondpro.chatshot.util.Textures;
@@ -77,7 +78,7 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Unique
     private void drawScreenshotButton(DrawContext context, int mouseX, int mouseY) {
-        int buttonX = this.width - 12;
+        int buttonX = this.width - 12 - CompatCore.getButtonOffset();
         int buttonY = this.height - 26;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
