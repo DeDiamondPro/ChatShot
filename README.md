@@ -4,6 +4,7 @@ ChatShot is a small client-side mod that allows you to copy a chat message to cl
 ![image](https://github.com/DeDiamondPro/ChatShot/assets/67508414/52cfee25-47bb-4534-86fe-bf8ed8be3b95)
 
 To do this just click the button behind a chat message or the button in the bottom right to copy a screenshot of the entire chat!
+
 ![image](https://github.com/DeDiamondPro/ChatShot/assets/67508414/1777f265-804f-47ea-a856-f681b3020c5d)![image](https://github.com/DeDiamondPro/ChatShot/assets/67508414/04193c63-2cc1-440b-b404-430faefd4806)
 
 ## Credits
