@@ -1,7 +1,7 @@
 # ChatShot
 ChatShot is a small client-side mod that allows you to copy a chat message to clipboard as text or as a transparent image!
 
-![image](https://github.com/DeDiamondPro/ChatShot/assets/67508414/52cfee25-47bb-4534-86fe-bf8ed8be3b95)
+![image](https://github.com/DeDiamondPro/ChatShot/assets/67508414/ba55f3e4-cca1-432c-8cda-38d5269da499)
 
 To do this just click the button behind a chat message or the button in the bottom right to copy a screenshot of the entire chat!
 
