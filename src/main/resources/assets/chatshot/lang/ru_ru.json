@@ -25,6 +25,6 @@
   "chatshot.saveImage": "Сохранять картинки",
   "chatshot.saveImage.description": "Сохранять картинки в .minecraft/screenshots/chat",
 
-  "modmenu.summaryTranslation.chatshot":"Копирование сообщений чата в виде текста или картинки в один клик.",
-  "modmenu.descriptionTranslation.chatshot":"Копирование сообщений чата в виде текста или картинки в один клик."
+  "modmenu.summaryTranslation.chatshot": "Копирование сообщений чата в виде текста или картинки в один клик.",
+  "modmenu.descriptionTranslation.chatshot": "Копирование сообщений чата в виде текста или картинки в один клик."
 }
