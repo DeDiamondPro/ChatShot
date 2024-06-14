@@ -10,6 +10,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
+import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
@@ -37,7 +38,7 @@ public class ChatCopyUtil {
     public static void copyString(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
         for (ChatHudLine.Visible line : lines) {
-            //#if MC < 12100
+            //#if MC < 12100 || FABRIC == 0
             line.content().accept(visitor);
             //#else
             //$$ line.comp_896().accept(visitor);
@@ -56,11 +57,13 @@ public class ChatCopyUtil {
         DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
         int width = 0;
         for (ChatHudLine.Visible line : lines) {
-            //#if MC < 12100
-            width = Math.max(width, client.textRenderer.getWidth(line.content()));
+            OrderedText content =
+            //#if MC < 12100 || FABRIC == 0
+                    line.content();
             //#else
-            //$$ width = Math.max(width, client.textRenderer.getWidth(line.comp_896()));
+            //$$    line.comp_896();
             //#endif
+            width = Math.max(width, client.textRenderer.getWidth(content));
         }
         int height = lines.size() * 9;
 
@@ -69,11 +72,13 @@ public class ChatCopyUtil {
         fb.beginWrite(false);
         int y = 0;
         for (ChatHudLine.Visible line : lines) {
-            //#if MC < 12100
-            context.drawText(client.textRenderer, line.content(), 0, y, 0xFFFFFF, shadow);
+            OrderedText content =
+            //#if MC < 12100 || FABRIC == 0
+                    line.content();
             //#else
-            //$$ context.drawText(client.textRenderer, line.comp_896(), 0, y, 0xFFFFFF, shadow);
+            //$$    line.comp_896();
             //#endif
+            context.drawText(client.textRenderer, content, 0, y, 0xFFFFFF, shadow);
             y += 9;
         }
         fb.endWrite();
