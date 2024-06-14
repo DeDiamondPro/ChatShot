@@ -68,7 +68,11 @@ public abstract class ChatScreenMixin extends Screen {
             ArrayList<ChatHudLine.Visible> messageParts = new ArrayList<>();
             messageParts.add(visibleMessages.get(index));
             for (int i = index + 1; i < visibleMessages.size(); i++) {
+                //#if MC < 12100
                 if (visibleMessages.get(i).endOfEntry()) break;
+                //#else
+                //$$ if (visibleMessages.get(i).comp_898()) break;
+                //#endif
                 messageParts.add(0, visibleMessages.get(i));
             }
             if (messageParts.isEmpty()) return;

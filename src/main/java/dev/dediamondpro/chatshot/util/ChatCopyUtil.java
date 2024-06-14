@@ -37,7 +37,11 @@ public class ChatCopyUtil {
     public static void copyString(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
         for (ChatHudLine.Visible line : lines) {
+            //#if MC < 12100
             line.content().accept(visitor);
+            //#else
+            //$$ line.comp_896().accept(visitor);
+            //#endif
         }
         client.keyboard.setClipboard(visitor.collect());
         if (Config.INSTANCE.showCopyMessage) {
@@ -52,7 +56,11 @@ public class ChatCopyUtil {
         DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
         int width = 0;
         for (ChatHudLine.Visible line : lines) {
+            //#if MC < 12100
             width = Math.max(width, client.textRenderer.getWidth(line.content()));
+            //#else
+            //$$ width = Math.max(width, client.textRenderer.getWidth(line.comp_896()));
+            //#endif
         }
         int height = lines.size() * 9;
 
@@ -61,7 +69,11 @@ public class ChatCopyUtil {
         fb.beginWrite(false);
         int y = 0;
         for (ChatHudLine.Visible line : lines) {
+            //#if MC < 12100
             context.drawText(client.textRenderer, line.content(), 0, y, 0xFFFFFF, shadow);
+            //#else
+            //$$ context.drawText(client.textRenderer, line.comp_896(), 0, y, 0xFFFFFF, shadow);
+            //#endif
             y += 9;
         }
         fb.endWrite();

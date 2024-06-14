@@ -226,7 +226,10 @@ fun getInternalMcVersionStr(): String {
 
 fun getMcVersionList(): List<String> {
     return when (project.platform.mcVersionStr) {
-        "1.20.1" -> listOf("1.20", "1.20.1")
+        "1.20.1" -> mutableListOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4").apply {
+            if (platform.isFabric) addAll(listOf("1.20.5", "1.20.6"))
+        }
+        "1.21" -> listOf("1.21")
         else -> error("Unknown version")
     }
 }
