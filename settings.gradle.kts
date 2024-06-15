@@ -6,9 +6,10 @@ pluginManagement {
         maven("https://maven.architectury.dev/")
         maven("https://maven.minecraftforge.net")
         maven("https://repo.essential.gg/repository/maven-public")
+        maven("https://maven.dediamondpro.dev/releases")
         maven("https://repo.polyfrost.org/releases")
     }
-    val egtVersion = "0.6.0"
+    val egtVersion = "0.6.0+diamond.neofix"
     plugins {
         id("gg.essential.multi-version.root") version egtVersion
     }
@@ -32,6 +33,8 @@ rootProject.buildFileName = "root.gradle.kts"
 listOf(
     "1.20.1-fabric",
     "1.20.1-forge",
+    "1.21-forge",
+    //"1.21-neoforge",
     "1.21-fabric",
 ).forEach { version ->
     include(":$version")

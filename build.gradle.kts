@@ -41,9 +41,8 @@ loom {
     }
     if (project.platform.isForge) forge {
         mixinConfig("mixins.${mod_id}.json")
+        mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
     }
-
-    mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
 }
 
 repositories {
@@ -54,6 +53,7 @@ repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
     maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
     maven("https://api.modrinth.com/maven")
+    maven("https://maven.neoforged.net/releases/")
     mavenCentral()
 }
 
@@ -117,11 +117,19 @@ tasks {
         from(rootProject.file("LICENSE.LESSER"))
     }
     named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveClassifier.set("dev")
+        archiveClassifier.set(if (platform.isForge && platform.mcVersion >= 12100) "" else "dev")
         configurations = listOf(shade)
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+        if (platform.isForge && platform.mcVersion >= 12100) {
+            exclude("mixins.${mod_id}.refmap.json")
+        }
     }
     remapJar {
+        if (platform.isForge && platform.mcVersion >= 12100) {
+            enabled = false
+        }
+
         input.set(shadowJar.get().archiveFile)
         archiveClassifier.set("")
         finalizedBy("copyJar")
@@ -145,7 +153,7 @@ tasks {
     }
     register<Copy>("copyJar") {
         File("${project.rootDir}/jars").mkdir()
-        from(remapJar.get().archiveFile)
+        from(if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile)
         into("${project.rootDir}/jars")
     }
     clean { delete("${project.rootDir}/jars") }
@@ -154,7 +162,7 @@ tasks {
         projectId.set("chatshot")
         versionNumber.set(mod_version)
         versionName.set("[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version")
-        uploadFile.set(remapJar.get().archiveFile as Any)
+        uploadFile.set(if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile)
         gameVersions.addAll(getMcVersionList())
         if (platform.isFabric) {
             loaders.add("fabric")
@@ -188,9 +196,11 @@ tasks {
                 if (platform.mcMinor >= 20) addGameVersion("NeoForge")
             }
             releaseType = "release"
-            mainArtifact(remapJar.get().archiveFile, closureOf<CurseArtifact> {
-                displayName = "[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version"
-            })
+            mainArtifact(
+                if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile,
+                closureOf<CurseArtifact> {
+                    displayName = "[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version"
+                })
         })
         options(closureOf<Options> {
             javaVersionAutoDetect = false
@@ -229,6 +239,7 @@ fun getMcVersionList(): List<String> {
         "1.20.1" -> mutableListOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4").apply {
             if (platform.isFabric) addAll(listOf("1.20.5", "1.20.6"))
         }
+
         "1.21" -> listOf("1.21")
         else -> error("Unknown version")
     }
