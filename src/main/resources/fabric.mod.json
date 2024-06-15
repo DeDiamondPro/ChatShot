@@ -25,13 +25,12 @@
       }
     }
   },
-  "icon": "ChatShot-128x.png",
+  "icon": "chatshot-128x.png",
   "license": "LGPL",
   "environment": "client",
   "depends": {
     "fabricloader": ">=0.14.0",
     "minecraft": "${mcVersionStr}",
-    "java": ">=${java}",
     "fabric-resource-loader-v0": "*"
   },
   "recommends": {

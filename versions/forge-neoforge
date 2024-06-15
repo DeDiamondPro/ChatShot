@@ -1,0 +1,4 @@
+net.neoforged.neoforge.client.gui.IConfigScreenFactory net.minecraftforge.client.ConfigScreenHandler
+net.neoforged.fml.ModList net.minecraftforge.fml.ModList
+net.neoforged.fml.ModLoadingContext net.minecraftforge.fml.ModLoadingContext
+net.neoforged.fml.common.Mod net.minecraftforge.fml.common.Mod

@@ -16,7 +16,7 @@ preprocess {
 
     fabric12100.link(fabric12001)
 
-    neoforge12100.link(fabric12100)
+    neoforge12100.link(forge12100, file("versions/forge-neoforge"))
 
     forge12001.link(fabric12001)
     forge12100.link(fabric12100)

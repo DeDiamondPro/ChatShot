@@ -75,27 +75,20 @@ dependencies {
 }
 
 tasks.processResources {
+    val forgeMcVersionStr = if (platform.mcMinor == 21) "[1.21,1.22)" else "[1.20,1.21)"
     inputs.property("id", mod_id)
     inputs.property("name", mod_name)
-    val java = if (project.platform.mcMinor >= 18) {
-        17
-    } else {
-        if (project.platform.mcMinor == 17) 16 else 8
-    }
-    val compatLevel = "JAVA_${java}"
-    inputs.property("java", java)
-    inputs.property("java_level", compatLevel)
     inputs.property("version", mod_version)
     inputs.property("mcVersionStr", project.platform.mcVersionStr)
-    filesMatching(listOf("mcmod.info", "mods.toml", "fabric.mod.json")) {
+    inputs.property("forgeMcVersionStr", forgeMcVersionStr)
+    filesMatching(listOf("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "fabric.mod.json")) {
         expand(
             mapOf(
                 "id" to mod_id,
                 "name" to mod_name,
-                "java" to java,
-                "java_level" to compatLevel,
                 "version" to mod_version,
-                "mcVersionStr" to getInternalMcVersionStr()
+                "mcVersionStr" to getInternalMcVersionStr(),
+                "forgeMcVersionStr" to forgeMcVersionStr,
             )
         )
     }
@@ -104,13 +97,15 @@ tasks.processResources {
 tasks {
     withType<Jar> {
         if (project.platform.isFabric) {
-            exclude("mcmod.info", "mods.toml", "pack.mcmeta")
+            exclude("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "pack.mcmeta")
         } else {
             exclude("fabric.mod.json")
             if (project.platform.isLegacyForge) {
-                exclude("mods.toml")
-            } else {
-                exclude("mcmod.info")
+                exclude("mods.toml", "META-INF/neoforge.mods.toml")
+            } else if (platform.isForge) {
+                exclude("mcmod.info", "META-INF/neoforge.mods.toml")
+            } else if (platform.isNeoForge) {
+                exclude("mcmod.info", "META-INF/mods.toml")
             }
         }
         from(rootProject.file("LICENSE"))

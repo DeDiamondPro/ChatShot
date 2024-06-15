@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion="[41,)"
+loaderVersion="[3,)"
 license="LGPL"
 showAsResourcePack=false
 
@@ -9,7 +9,7 @@ version="${version}"
 displayName="ChatShot"
 authors="DeDiamondPro"
 description="Copy chat messages as text or a nice transparent image with one click."
-logoFile= "chatshot-128x.png"
+logoFile="chatshot-128x.png"
 
 [[dependencies.chatshot]]
 modId="minecraft"
@@ -23,3 +23,6 @@ modId="yet_another_config_lib_v3"
 versionRange="[3.0.0,)"
 mandatory=false
 side="CLIENT"
+
+[[mixins]]
+config = "mixins.chatshot.json"
