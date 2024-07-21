@@ -1,4 +1,4 @@
-# ChatShot 1.0.1
+# ChatShot 1.0.2
 
-- Added support for 1.21 fabric, forge and neoforge
-- Added Russian localization
+- Fix compatibility issues with ImmediatelyFast
+- Improve compatibility with SymbolChat

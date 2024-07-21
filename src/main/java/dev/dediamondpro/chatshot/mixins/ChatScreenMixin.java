@@ -88,7 +88,7 @@ public abstract class ChatScreenMixin extends Screen {
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
         context.fill(buttonX, buttonY, buttonX + 10, buttonY + 10, hovering ? 0xFFFFFF + color : color);
         context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
-        if (hovering) {
+        if (hovering && Config.INSTANCE.tooltip) {
             ArrayList<Text> tooltip = new ArrayList<>();
             tooltip.add(Text.translatable("chatshot.copy"));
             tooltip.add(Text.translatable("chatshot.clickImage"));
