@@ -106,10 +106,10 @@ public abstract class ChatScreenMixin extends Screen {
         }
     }
 
-    @Inject(method = "mouseClicked", at = @At("RETURN"))
+    @Inject(method = "mouseClicked", at = @At("HEAD"))
     void onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (button != 0) return;
-        this.mouseClicked = !cir.getReturnValue();
+        this.mouseClicked = true;
     }
 
     @Unique
