@@ -29,7 +29,7 @@ public abstract class ChatScreenMixin extends Screen {
     @Unique
     private boolean mouseClicked = false;
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render", at = @At("TAIL"))
     void onDraw(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         drawLineButton(context, mouseX, mouseY);
         drawScreenshotButton(context, mouseX, mouseY);
@@ -82,12 +82,18 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Unique
     private void drawScreenshotButton(DrawContext context, int mouseX, int mouseY) {
-        int buttonX = this.width - 12 - CompatCore.getButtonOffset();
+        int buttonX = this.width - 12 - CompatCore.INSTANCE.getButtonOffset();
         int buttonY = this.height - 26;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
         context.fill(buttonX, buttonY, buttonX + 10, buttonY + 10, hovering ? 0xFFFFFF + color : color);
         context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        if (hovering) {
+            ArrayList<Text> tooltip = new ArrayList<>();
+            tooltip.add(Text.translatable("chatshot.copy"));
+            tooltip.add(Text.translatable("chatshot.clickImage"));
+            context.drawTooltip(this.client.textRenderer, tooltip, mouseX, mouseY);
+        }
         if (this.mouseClicked && hovering) {
             context.draw(); // Make sure the current context has drawn everything before we start messing with frameBuffers
             ArrayList<ChatHudLine.Visible> lines = new ArrayList<>();

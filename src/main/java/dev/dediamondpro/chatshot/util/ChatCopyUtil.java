@@ -1,5 +1,6 @@
 package dev.dediamondpro.chatshot.util;
 
+import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
@@ -81,6 +82,8 @@ public class ChatCopyUtil {
             context.drawText(client.textRenderer, content, 0, y, 0xFFFFFF, shadow);
             y += 9;
         }
+        // Force mods doing things like hud-batching to draw immediately
+        CompatCore.INSTANCE.drawChatHud();
         fb.endWrite();
 
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {

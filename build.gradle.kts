@@ -64,6 +64,7 @@ val shade: Configuration by configurations.creating {
 dependencies {
     compileOnly(libs.objc)
     modCompileOnly("maven.modrinth:no-chat-reports:Fabric-1.20.1-v2.2.2")
+    modCompileOnly("maven.modrinth:immediatelyfast:1.2.18+1.20.4-fabric")
     if (platform.isFabric) {
         modImplementation(libs.yacl.fabric)
         modImplementation(libs.modMenu)
