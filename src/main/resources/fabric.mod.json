@@ -30,7 +30,7 @@
   "environment": "client",
   "depends": {
     "fabricloader": ">=0.14.0",
-    "minecraft": "${mcVersionStr}",
+    "minecraft": "${fabricMcVersion}",
     "fabric-resource-loader-v0": "*"
   },
   "recommends": {

@@ -55,6 +55,9 @@ public class ChatCopyUtil {
         boolean shadow = Config.INSTANCE.shadow;
         int scaleFactor = Config.INSTANCE.scale;
 
+        // Force mods doing things like hud-batching to draw immediately before we start messing with framebuffers
+        CompatCore.INSTANCE.drawChatHud();
+
         DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
         int width = 0;
         for (ChatHudLine.Visible line : lines) {

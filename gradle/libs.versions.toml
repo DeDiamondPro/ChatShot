@@ -6,17 +6,14 @@ kotlin = "1.9.23"
 yacl = "3.1.1+1.20"
 modMenu = "7.2.1"
 
-# Essential Dependencies
-egt = "0.2.2"
-
 # Publishing
 minotaur = "2.8.0"
 cursegradle = "1.4.0"
 
 # Misc
-shadow = "7.1.2"
+shadow = "8.1.1"
 blossom = "1.3.2"
-devAuth = "1.1.2"
+devAuth = "1.2.1"
 objc = "1.2"
 
 [libraries]
@@ -35,11 +32,6 @@ objc = { module = "ca.weblite:java-objc-bridge", version.ref = "objc" }
 [plugins]
 # Kotlin
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-
-# Essential Gradle Toolkit
-egt_multiversion = { id = "gg.essential.multi-version", version.ref = "egt" }
-egt_multiversion_root = { id = "gg.essential.multi-version.root", version.ref = "egt" }
-egt_defaults = { id = "gg.essential.defaults", version.ref = "egt" }
 
 # Publishing
 minotaur = { id = "com.modrinth.minotaur", version.ref = "minotaur" }

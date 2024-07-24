@@ -6,7 +6,7 @@
   "client": [
     "ChatHudAccessor",
     "ChatScreenMixin",
-    "DrawContextMixin",
+    "ChatHudMixin",
     "MainMixin"
   ]
 }

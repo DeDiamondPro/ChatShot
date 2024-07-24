@@ -31,7 +31,7 @@ blossom {
 version = mod_version
 group = "dev.dediamondpro"
 base {
-    archivesName.set("$mod_name (${getMcVersionStr()}-${platform.loaderStr})")
+    archivesName.set("$mod_name (${getPrettyVersionRange()}-${platform.loaderStr})")
 }
 
 loom.noServerRunConfigs()
@@ -66,30 +66,38 @@ dependencies {
     modCompileOnly("maven.modrinth:no-chat-reports:Fabric-1.20.1-v2.2.2")
     modCompileOnly("maven.modrinth:immediatelyfast:1.2.18+1.20.4-fabric")
     if (platform.isFabric) {
-        modImplementation(libs.yacl.fabric)
-        modImplementation(libs.modMenu)
+        val fabricApiVersion = when(project.platform.mcVersion) {
+            12006 -> "0.100.4+1.20.6"
+            else -> null
+        }
+        fabricApiVersion?.let { modImplementation("net.fabricmc.fabric-api:fabric-api:$it") }
+        modCompileOnly(libs.yacl.fabric) {
+            isTransitive = false
+        }
+        modCompileOnly(libs.modMenu)
         modRuntimeOnly(libs.devAuth.fabric)
     } else {
-        modImplementation(libs.yacl.forge)
+        modCompileOnly(libs.yacl.forge) {
+            isTransitive = false
+        }
         modRuntimeOnly(libs.devAuth.forge)
     }
 }
 
 tasks.processResources {
-    val forgeMcVersionStr = if (platform.mcMinor == 21) "[1.21,1.22)" else "[1.20,1.21)"
     inputs.property("id", mod_id)
     inputs.property("name", mod_name)
     inputs.property("version", mod_version)
-    inputs.property("mcVersionStr", project.platform.mcVersionStr)
-    inputs.property("forgeMcVersionStr", forgeMcVersionStr)
+    inputs.property("fabricMcVersion", getFabricMcVersionRange())
+    inputs.property("forgeMcVersion", getForgeMcVersionRange())
     filesMatching(listOf("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "fabric.mod.json")) {
         expand(
             mapOf(
                 "id" to mod_id,
                 "name" to mod_name,
                 "version" to mod_version,
-                "mcVersionStr" to getInternalMcVersionStr(),
-                "forgeMcVersionStr" to forgeMcVersionStr,
+                "fabricMcVersion" to getFabricMcVersionRange(),
+                "forgeMcVersion" to getForgeMcVersionRange(),
             )
         )
     }
@@ -157,15 +165,16 @@ tasks {
         token.set(System.getenv("MODRINTH_TOKEN"))
         projectId.set("chatshot")
         versionNumber.set(mod_version)
-        versionName.set("[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version")
+        versionName.set("[${getPrettyVersionRange()}-${platform.loaderStr}] ChatShot $mod_version")
         uploadFile.set(if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile)
-        gameVersions.addAll(getMcVersionList())
+        gameVersions.addAll(getSupportedVersionList())
         if (platform.isFabric) {
             loaders.add("fabric")
             loaders.add("quilt")
         } else if (platform.isForge) {
             loaders.add("forge")
-            if (platform.mcMinor >= 20) loaders.add("neoforge")
+        } else if (platform.isNeoForge) {
+            loaders.add("neoforge")
         }
         changelog.set(file("../../changelog.md").readText())
         dependencies {
@@ -183,19 +192,20 @@ tasks {
                 if (platform.isFabric) requiredDependency("fabric-api")
                 requiredDependency("yacl")
             })
-            gameVersionStrings.addAll(getMcVersionList())
+            gameVersionStrings.addAll(getSupportedVersionList())
             if (platform.isFabric) {
                 addGameVersion("Fabric")
                 addGameVersion("Quilt")
             } else if (platform.isForge) {
                 addGameVersion("Forge")
-                if (platform.mcMinor >= 20) addGameVersion("NeoForge")
+            } else if (platform.isNeoForge) {
+                addGameVersion("NeoForge")
             }
             releaseType = "release"
             mainArtifact(
                 if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile,
                 closureOf<CurseArtifact> {
-                    displayName = "[${getMcVersionStr()}-${platform.loaderStr}] ChatShot $mod_version"
+                    displayName = "[${getPrettyVersionRange()}-${platform.loaderStr}] ChatShot $mod_version"
                 })
         })
         options(closureOf<Options> {
@@ -210,33 +220,57 @@ tasks {
     }
 }
 
-fun getMcVersionStr(): String {
-    return when (project.platform.mcVersionStr) {
-        else -> {
-            val dots = project.platform.mcVersionStr.count { it == '.' }
-            if (dots == 1) "${project.platform.mcVersionStr}.x"
-            else "${project.platform.mcVersionStr.substringBeforeLast(".")}.x"
-        }
+// Function to get the range of mc versions supported by a version we are building for.
+// First value is start of range, second value is end of range or null to leave the range open
+fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion) {
+    12100 -> "1.21" to null
+    12006 -> "1.20.5" to "1.20.6"
+    12001 -> "1.20" to "1.20.4"
+    else -> error("Undefined version range for ${platform.mcVersion}")
+}
+
+fun getPrettyVersionRange(): String {
+    val supportedVersionRange = getSupportedVersionRange()
+    return when {
+        platform.mcVersion == 12100 -> "1.21.x"
+        platform.mcVersion == 12006 -> "1.20.6"
+        supportedVersionRange.first == supportedVersionRange.second -> supportedVersionRange.first
+        else -> "${supportedVersionRange.first}${supportedVersionRange.second?.let { "-$it" } ?: "+"}"
     }
 }
 
-fun getInternalMcVersionStr(): String {
-    return when (project.platform.mcVersionStr) {
-        else -> {
-            val dots = project.platform.mcVersionStr.count { it == '.' }
-            if (dots == 1) "${project.platform.mcVersionStr}.x"
-            else "${project.platform.mcVersionStr.substringBeforeLast(".")}.x"
-        }
-    }
+fun getFabricMcVersionRange(): String {
+    if (platform.mcVersion == 12100) return "1.21.x"
+    val supportedVersionRange = getSupportedVersionRange()
+    if (supportedVersionRange.first == supportedVersionRange.second) return supportedVersionRange.first
+    return ">=${supportedVersionRange.first}${supportedVersionRange.second?.let { " <=$it" } ?: ""}"
 }
 
-fun getMcVersionList(): List<String> {
-    return when (project.platform.mcVersionStr) {
-        "1.20.1" -> mutableListOf("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4").apply {
-            if (platform.isFabric) addAll(listOf("1.20.5", "1.20.6"))
-        }
+fun getForgeMcVersionRange(): String {
+    val supportedVersionRange = getSupportedVersionRange()
+    if (supportedVersionRange.first == supportedVersionRange.second) return "[${supportedVersionRange.first}]"
+    return "[${supportedVersionRange.first},${supportedVersionRange.second?.let { "$it]" } ?: ")"}"
+}
 
+fun getSupportedVersionList(): List<String> {
+    val supportedVersionRange = getSupportedVersionRange()
+    return when (supportedVersionRange.first) {
         "1.21" -> listOf("1.21")
-        else -> error("Unknown version")
+        else -> {
+            val minorVersion = supportedVersionRange.first.let {
+                if (it.count { c -> c == '.' } == 1) it else it.substringBeforeLast(".")
+            }
+            val start = supportedVersionRange.first.let {
+                if (it.count { c -> c == '.' } == 1) 0 else it.substringAfterLast(".").toInt()
+            }
+            val end = supportedVersionRange.second!!.let {
+                if (it.count { c -> c == '.' } == 1) 0 else it.substringAfterLast(".").toInt()
+            }
+            val versions = mutableListOf<String>()
+            for (i in start..end) {
+                versions.add("$minorVersion${if (i == 0) "" else ".$i"}")
+            }
+            versions
+        }
     }
 }

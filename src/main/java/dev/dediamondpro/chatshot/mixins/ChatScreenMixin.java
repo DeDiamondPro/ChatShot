@@ -1,5 +1,6 @@
 package dev.dediamondpro.chatshot.mixins;
 
+import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.ChatCopyUtil;
@@ -38,24 +39,38 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Unique
     private void drawLineButton(DrawContext context, int mouseX, int mouseY) {
-        double chatLineY = getChatHudA().toChatLineYA(mouseY);
-        int index = getChatHudA().getMessageIndexA(0, chatLineY);
-        float chatScale = (float) getChatHud().getChatScale();
-        int buttonX = (int) (getChatHud().getWidth() + 14 * chatScale);
-        if (index == -1 || mouseX > buttonX + 14) return;
-        int lineHeight = getChatHudA().getLineHeightA();
-        boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 9;
-        int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
+        ChatHud chatHud = getChatHud();
+        ChatHudAccessor chatHudA = getChatHudA();
+        ChatHudLocals chatHudL = (ChatHudLocals) chatHud;
+
+        float chatScale = (float) chatHud.getChatScale();
+        int chatLineY = (int) chatHudA.toChatLineYA(mouseY);
+        int messageIndex = chatHudA.getMessageIndexA(0, chatLineY);
+        int buttonX = (int) (chatHud.getWidth() + 14 * chatScale);
+        if (messageIndex == -1 || mouseX > buttonX + 14 * chatScale) return;
+
+        int color = chatHudL.chatShot$getChatBackgroundColor();
+        int chatY = chatHudL.chatShot$getChatY();
+        // If we couldn't find the chat locals, use the vanilla values and hope they are correct
+        if (chatY == -1) {
+            // chatY = (int) ((height - 40) / chatScale);
+            // color = (int) (this.client.options.getTextBackgroundOpacity().getValue() * 255.0) << 24;
+        }
+        int buttonSize = (int) (9 * chatScale);
+        int lineHeight = chatHudA.getLineHeightA();
+        int scaledButtonX = (int) (chatHud.getWidth() / chatScale + 14);
+        int scaledButtonY = chatY - (chatLineY + 1) * lineHeight + (int) Math.ceil((lineHeight - 9) / 2.0);
+        float buttonY = scaledButtonY * chatScale;
+        boolean hovering = mouseX >= buttonX && mouseX <= buttonX + buttonSize && mouseY >= buttonY && mouseY <= buttonY + buttonSize;
 
         context.getMatrices().push();
         context.getMatrices().scale(chatScale, chatScale, 1f);
-        int scaledButtonX = (int) (getChatHud().getWidth() / chatScale + 14);
-        int scaledButtonY = (int) ((height - 40) / chatScale - ((int) chatLineY + 1) * lineHeight);
-        context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF + color : color);
+        context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF | color : color);
         context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
         context.getMatrices().pop();
 
         if (hovering && Config.INSTANCE.tooltip) {
+            // Draw the tooltip
             ArrayList<Text> tooltip = new ArrayList<>();
             tooltip.add(Text.translatable("chatshot.copy"));
             tooltip.add(Text.translatable("chatshot.click" + (Config.INSTANCE.clickAction == Config.CopyType.TEXT ? "Text" : "Image")));
@@ -64,10 +79,11 @@ public abstract class ChatScreenMixin extends Screen {
         }
         if (hovering && this.mouseClicked) {
             context.draw(); // Make sure the current context has drawn everything before we start messing with frameBuffers
-            List<ChatHudLine.Visible> visibleMessages = getChatHudA().getVisibleMessages();
+            List<ChatHudLine.Visible> visibleMessages = chatHudA.getVisibleMessages();
             ArrayList<ChatHudLine.Visible> messageParts = new ArrayList<>();
-            messageParts.add(visibleMessages.get(index));
-            for (int i = index + 1; i < visibleMessages.size(); i++) {
+            // Collect all lines of the message
+            messageParts.add(visibleMessages.get(messageIndex));
+            for (int i = messageIndex + 1; i < visibleMessages.size(); i++) {
                 //#if MC < 12100 || FABRIC == 0
                 if (visibleMessages.get(i).endOfEntry()) break;
                 //#else
