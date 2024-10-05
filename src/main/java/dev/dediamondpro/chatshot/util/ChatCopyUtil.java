@@ -9,8 +9,10 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
@@ -70,8 +72,16 @@ public class ChatCopyUtil {
             width = Math.max(width, client.textRenderer.getWidth(content));
         }
         int height = lines.size() * 9;
+        Framebuffer fb;
+        try {
+             fb = createBuffer(width * scaleFactor, height * scaleFactor);
+        } catch (IllegalArgumentException e) {
+            // If we get this error that mean the window is too big or the chat is empty
+            ClientPlayerEntity player = client.player;
+            player.sendMessage(Text.translatable("chatshot.noMessageFound"));
+            return;
+        }
 
-        Framebuffer fb = createBuffer(width * scaleFactor, height * scaleFactor);
         context.getMatrices().scale((float) client.getWindow().getScaledWidth() / width, (float) client.getWindow().getScaledHeight() / height, 1f);
         fb.beginWrite(false);
         int y = 0;
@@ -128,7 +138,9 @@ public class ChatCopyUtil {
     }
 
     private static Framebuffer createBuffer(int width, int height) {
+        //
         Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
+        //
         fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
         fb.clear(false);
         return fb;

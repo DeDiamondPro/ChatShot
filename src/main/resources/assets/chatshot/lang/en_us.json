@@ -23,5 +23,6 @@
   "chatshot.copyOption.text": "Copy as Text",
   "chatshot.copyOption.image": "Copy as Image",
   "chatshot.saveImage": "Save Image",
-  "chatshot.saveImage.description": "Save the image of the chat you made to .minecraft/screenshots/chat"
+  "chatshot.saveImage.description": "Save the image of the chat you made to .minecraft/screenshots/chat",
+  "chatshot.noMessageFound": "§4The chat is empty"
 }
