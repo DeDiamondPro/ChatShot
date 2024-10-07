@@ -77,8 +77,7 @@ public class ChatCopyUtil {
              fb = createBuffer(width * scaleFactor, height * scaleFactor);
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
-            ClientPlayerEntity player = client.player;
-            player.sendMessage(Text.translatable("chatshot.noMessageFound"));
+            client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.noMessageFound"));
             return;
         }
 
@@ -138,9 +137,7 @@ public class ChatCopyUtil {
     }
 
     private static Framebuffer createBuffer(int width, int height) {
-        //
         Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
-        //
         fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
         fb.clear(false);
         return fb;
