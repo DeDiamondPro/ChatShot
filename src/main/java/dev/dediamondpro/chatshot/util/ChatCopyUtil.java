@@ -99,7 +99,13 @@ public class ChatCopyUtil {
         fb.endWrite();
 
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
+            //#if MC < 12104
             BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
+            //#else
+            //$$ nativeImage.writeTo(new File("screenshots/temp.png")); // Save the image to a temporary file to read it
+            //$$ BufferedImage image = ImageIO.read(new File("screenshots/temp.png"));
+            //#endif
+
             BufferedImage transparentImage = imageToBufferedImage(makeColorTransparent(image, new Color(0x36, 0x39, 0x3F)));
             boolean copySuccessfull = false;
             if (Config.INSTANCE.saveImage || MinecraftClient.IS_SYSTEM_MAC) {
@@ -137,9 +143,15 @@ public class ChatCopyUtil {
     }
 
     private static Framebuffer createBuffer(int width, int height) {
-        Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
-        fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
-        fb.clear(false);
+        //#if MC <= 12100 || FABRIC == 0
+            Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
+            fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
+            fb.clear(false);
+        //#else
+        //$$ Framebuffer fb = new SimpleFramebuffer(width, height, true);
+        //$$ fb.setClearColor(0f, 0f, 0f, 0f);
+        //$$ fb.clear();
+        //#endif
         return fb;
     }
 
