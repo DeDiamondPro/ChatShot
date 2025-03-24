@@ -42,6 +42,15 @@ loom {
     if (project.platform.isForge) forge {
         mixinConfig("mixins.${mod_id}.json")
         mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
+        if (project.platform.mcVersion > 12100){
+            accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
+        }
+    }
+    if (project.platform.isFabric && project.platform.mcVersion > 12100)  {
+        accessWidenerPath.set(file("src/main/resources/chatshot.accesswidener"))
+    }
+    if (project.platform.isNeoForge) neoForge {
+        accessTransformers.files.add(file("src/main/resources/META-INF/accesstransformer.cfg"))
     }
 }
 
@@ -68,6 +77,7 @@ dependencies {
     if (platform.isFabric) {
         val fabricApiVersion = when(project.platform.mcVersion) {
             12006 -> "0.100.4+1.20.6"
+            12104 -> "0.119.2+1.21.4"
             else -> null
         }
         fabricApiVersion?.let { modImplementation("net.fabricmc.fabric-api:fabric-api:$it") }
@@ -223,7 +233,8 @@ tasks {
 // Function to get the range of mc versions supported by a version we are building for.
 // First value is start of range, second value is end of range or null to leave the range open
 fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion) {
-    12100 -> "1.21" to null
+    12104 -> "1.21.4" to "1.21.4"
+    12100 -> "1.21" to "1.21"
     12006 -> "1.20.5" to "1.20.6"
     12001 -> "1.20" to "1.20.4"
     else -> error("Undefined version range for ${platform.mcVersion}")
@@ -232,7 +243,8 @@ fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion
 fun getPrettyVersionRange(): String {
     val supportedVersionRange = getSupportedVersionRange()
     return when {
-        platform.mcVersion == 12100 -> "1.21.x"
+        platform.mcVersion == 12104 -> "1.21.4"
+        platform.mcVersion == 12100 -> "1.21"
         platform.mcVersion == 12006 -> "1.20.6"
         supportedVersionRange.first == supportedVersionRange.second -> supportedVersionRange.first
         else -> "${supportedVersionRange.first}${supportedVersionRange.second?.let { "-$it" } ?: "+"}"
@@ -240,7 +252,8 @@ fun getPrettyVersionRange(): String {
 }
 
 fun getFabricMcVersionRange(): String {
-    if (platform.mcVersion == 12100) return "1.21.x"
+    if (platform.mcVersion == 12104) return "1.21.4"
+    if (platform.mcVersion == 12100) return "1.21"
     val supportedVersionRange = getSupportedVersionRange()
     if (supportedVersionRange.first == supportedVersionRange.second) return supportedVersionRange.first
     return ">=${supportedVersionRange.first}${supportedVersionRange.second?.let { " <=$it" } ?: ""}"
@@ -256,6 +269,7 @@ fun getSupportedVersionList(): List<String> {
     val supportedVersionRange = getSupportedVersionRange()
     return when (supportedVersionRange.first) {
         "1.21" -> listOf("1.21")
+        "1.21.4" -> listOf("1.21.4")
         else -> {
             val minorVersion = supportedVersionRange.first.let {
                 if (it.count { c -> c == '.' } == 1) it else it.substringBeforeLast(".")

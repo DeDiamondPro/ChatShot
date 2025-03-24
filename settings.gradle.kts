@@ -9,7 +9,7 @@ pluginManagement {
         maven("https://maven.dediamondpro.dev/releases")
         maven("https://repo.polyfrost.org/releases")
     }
-    val egtVersion = "0.6.0+diamond.neofix"
+    val egtVersion = "0.6.6"
     plugins {
         id("gg.essential.multi-version.root") version egtVersion
     }
@@ -38,6 +38,9 @@ listOf(
     "1.21-forge",
     "1.21-neoforge",
     "1.21-fabric",
+    "1.21.4-forge",
+    "1.21.4-neoforge",
+    "1.21.4-fabric",
 ).forEach { version ->
     include(":$version")
     project(":$version").apply {

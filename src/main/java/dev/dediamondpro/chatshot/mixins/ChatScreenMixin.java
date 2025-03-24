@@ -10,6 +10,7 @@ import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -66,7 +67,11 @@ public abstract class ChatScreenMixin extends Screen {
         context.getMatrices().push();
         context.getMatrices().scale(chatScale, chatScale, 1f);
         context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF | color : color);
-        context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
+        //#if MC >= 12104
+        context.drawTexture(RenderLayer::getGuiTextured, Textures.COPY, scaledButtonX,scaledButtonY, 0, 0, 9, 9, 9, 9);
+        //#else
+        //$$ context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
+        //#endif
         context.getMatrices().pop();
 
         if (hovering && Config.INSTANCE.tooltip) {
@@ -84,10 +89,10 @@ public abstract class ChatScreenMixin extends Screen {
             // Collect all lines of the message
             messageParts.add(visibleMessages.get(messageIndex));
             for (int i = messageIndex + 1; i < visibleMessages.size(); i++) {
-                //#if MC < 12100 || FABRIC == 0
-                if (visibleMessages.get(i).endOfEntry()) break;
+                //#if MC >= 12100 && FABRIC == 1
+                if (visibleMessages.get(i).comp_898()) break;
                 //#else
-                //$$ if (visibleMessages.get(i).comp_898()) break;
+                //$$ if (visibleMessages.get(i).endOfEntry()) break;
                 //#endif
                 messageParts.add(0, visibleMessages.get(i));
             }
@@ -103,7 +108,11 @@ public abstract class ChatScreenMixin extends Screen {
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
         context.fill(buttonX, buttonY, buttonX + 10, buttonY + 10, hovering ? 0xFFFFFF + color : color);
-        context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        //#if MC >= 12104
+        context.drawTexture(RenderLayer::getGuiTextured,  Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10); 
+        //#else
+        //$$ context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        //#endif
         if (hovering && Config.INSTANCE.tooltip) {
             ArrayList<Text> tooltip = new ArrayList<>();
             tooltip.add(Text.translatable("chatshot.copy"));
