@@ -22,7 +22,9 @@ import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.SpriteAtlasTexture;
+//#if MC >= 12104
 import net.minecraft.client.util.BufferAllocator;
+//#endif
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.OrderedText;
@@ -59,10 +61,7 @@ import java.util.logging.Logger;
 
 public class ChatCopyUtil {
 
-    static public boolean tracking = false;
             //#if MC >= 12104
-            //         return of("text", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, DrawMode.QUADS, 786432, false, false, net.minecraft.client.render.RenderLayer.MultiPhaseParameters.builder().program(TEXT_PROGRAM).texture(new RenderPhase.Texture(identifier, TriState.FALSE, false)).transparency(TRANSLUCENT_TRANSPARENCY).lightmap(ENABLE_LIGHTMAP).build(false));
-
             static public RenderLayer CUSTOM_TEXT_LAYER = RenderLayer.of(
                 "chatshot_text",
                 VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
@@ -105,10 +104,11 @@ public class ChatCopyUtil {
             client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.text.success"));
         }
     }
-    public static class TestProvider extends VertexConsumerProvider.Immediate {
+    //#if MC >= 12104
+    public static class OverrideVertexProvider extends VertexConsumerProvider.Immediate {
         private RenderLayer currentLayer = CUSTOM_TEXT_LAYER;
         public BufferBuilder bufferBuilder;
-        private TestProvider(BufferAllocator bufferAllocator) {
+        private OverrideVertexProvider(BufferAllocator bufferAllocator) {
             super(bufferAllocator, Object2ObjectSortedMaps.emptyMap());
             this.bufferBuilder = new BufferBuilder(this.allocator, CUSTOM_TEXT_LAYER.getDrawMode(), CUSTOM_TEXT_LAYER.getVertexFormat());
         }
@@ -117,11 +117,12 @@ public class ChatCopyUtil {
         {
             return this.bufferBuilder;
         }
-        public void draw2() {
+        public void finish_drawing() {
             this.pending.put(this.currentLayer, this.bufferBuilder);
             this.draw(this.currentLayer);
         }
     }
+    //#endif
     public static void copyImage(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         boolean shadow = Config.INSTANCE.shadow;
         int scaleFactor = Config.INSTANCE.scale;
@@ -149,10 +150,14 @@ public class ChatCopyUtil {
             client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.noMessageFound"));
             return;
         }
-        TestProvider customConsumer = new TestProvider(new BufferAllocator(256));
+        //#if MC >= 12104
+        OverrideVertexProvider customConsumer = new OverrideVertexProvider(new BufferAllocator(256));
         customConsumer.getBuffer(CUSTOM_TEXT_LAYER);
         DrawContext context = new DrawContext(client, customConsumer);
-
+        //#else
+        //$$ DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
+        //#endif
+        
         context.getMatrices().scale((float) client.getWindow().getScaledWidth() / width, (float) client.getWindow().getScaledHeight() / height, 1f);
         fb.beginWrite(false);
         int y = 0;
@@ -163,16 +168,16 @@ public class ChatCopyUtil {
             //#else
             //$$    line.content();
             //#endif
-            tracking = true; // Set tracking to true to avoid any issues with mods that track mouse input
             context.drawText(client.textRenderer, content, 0, y, 0xFFFFFF, shadow);
-            tracking = false;
             y += 9;
         }
 
         // Force mods doing things like hud-batching to draw immediately
         CompatCore.INSTANCE.drawChatHud();
+        //#if MC >= 12104
         context.draw();
-        customConsumer.draw2();
+        customConsumer.finish_drawing();
+        //#endif
         fb.endWrite();
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
             //#if MC >= 12104
