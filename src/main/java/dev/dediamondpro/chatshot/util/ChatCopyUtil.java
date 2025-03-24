@@ -61,25 +61,23 @@ import java.util.logging.Logger;
 
 public class ChatCopyUtil {
 
-            //#if MC >= 12104
-            static public RenderLayer CUSTOM_TEXT_LAYER = RenderLayer.of(
-                "chatshot_text",
-                VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
-                VertexFormat.DrawMode.QUADS,
-                786432,
-                RenderLayer.MultiPhaseParameters.builder()
-                    // Match the TEXT layer's settings except for the framebuffer
-                    .program(RenderPhase.TEXT_PROGRAM)
-                    .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
-                    .lightmap(RenderPhase.ENABLE_LIGHTMAP)
-                    .cull(RenderPhase.DISABLE_CULLING)
-                    .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
-                    // Override the Target phase to bind your framebuffer
-                    .target(new RenderPhase.Target("chatshot_fbo", () -> {
-                    }, () -> {})) // No cleanup needed (handled elsewhere)
-                    .build(false));
+    //#if MC >= 12104
+    static public RenderLayer CUSTOM_TEXT_LAYER = RenderLayer.of(
+        "chatshot_text",
+        VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
+        VertexFormat.DrawMode.QUADS,
+        786432,
+        RenderLayer.MultiPhaseParameters.builder()
+            .program(RenderPhase.TEXT_PROGRAM)
+            .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
+            .lightmap(RenderPhase.ENABLE_LIGHTMAP)
+            .cull(RenderPhase.DISABLE_CULLING)
+            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+            .target(new RenderPhase.Target("chatshot_fbo", () -> {
+            }, () -> {})) 
+            .build(false));
 
-            //#endif
+        //#endif
     public static void copy(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         if (GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
@@ -130,7 +128,6 @@ public class ChatCopyUtil {
         // Force mods doing things like hud-batching to draw immediately before we start messing with framebuffers
         CompatCore.INSTANCE.drawChatHud();
 
-        // DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
         int width = 0;
         for (ChatHudLine.Visible line : lines) {
             OrderedText content =
