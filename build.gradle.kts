@@ -42,6 +42,9 @@ loom {
     if (project.platform.isForge) forge {
         mixinConfig("mixins.${mod_id}.json")
         mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
+        if (project.platform.mcVersion > 12100){
+            accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
+        }
     }
     if (project.platform.isFabric && project.platform.mcVersion > 12100)  {
         accessWidenerPath.set(file("src/main/resources/chatshot.accesswidener"))
