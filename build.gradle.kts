@@ -20,8 +20,6 @@ val mod_id: String by project
 
 preprocess {
     vars.put("MODERN", if (project.platform.mcMinor >= 16) 1 else 0)
-    println("Preprocessing with mcVersion = ${project.platform.mcVersion}")
-
 }
 
 blossom {

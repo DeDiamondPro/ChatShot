@@ -47,12 +47,14 @@ import java.awt.*;
 import java.awt.image.*;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.StandardOpenOption;
@@ -63,21 +65,20 @@ public class ChatCopyUtil {
 
     //#if MC >= 12104
     static public RenderLayer CUSTOM_TEXT_LAYER = RenderLayer.of(
-        "chatshot_text",
-        VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
-        VertexFormat.DrawMode.QUADS,
-        786432,
-        RenderLayer.MultiPhaseParameters.builder()
-            .program(RenderPhase.TEXT_PROGRAM)
-            .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
-            .lightmap(RenderPhase.ENABLE_LIGHTMAP)
-            .cull(RenderPhase.DISABLE_CULLING)
-            .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
-            .target(new RenderPhase.Target("chatshot_fbo", () -> {
-            }, () -> {})) 
-            .build(false));
-
-        //#endif
+                    "chatshot_text",
+                    VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
+                    VertexFormat.DrawMode.QUADS,
+                    786432,
+                    RenderLayer.MultiPhaseParameters.builder()
+                        .program(RenderPhase.TEXT_PROGRAM)
+                        .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
+                        .lightmap(RenderPhase.ENABLE_LIGHTMAP)
+                        .cull(RenderPhase.DISABLE_CULLING)
+                        .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+                        .target(new RenderPhase.Target("chatshot_fbo", () -> {
+                        }, () -> {})) 
+                        .build(false));
+    //#endif
     public static void copy(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         if (GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
@@ -178,8 +179,14 @@ public class ChatCopyUtil {
         fb.endWrite();
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
             //#if MC >= 12104
-            nativeImage.writeTo(new File("screenshots/temp.png")); // Save the image to a temporary file to read it
-            BufferedImage image = ImageIO.read(new File("screenshots/temp.png"));
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+            WritableByteChannel writableChannel = Channels.newChannel(outputStream);
+            nativeImage.write(writableChannel);
+            writableChannel.close();
+            
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+            BufferedImage image = ImageIO.read(inputStream);
             //#else
             //$$ BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
             //#endif
