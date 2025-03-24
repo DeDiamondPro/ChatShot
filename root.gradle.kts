@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin) apply false
     alias(libs.plugins.shadow) apply false
     alias(libs.plugins.blossom) apply false
-    id("gg.essential.multi-version.root")
+    alias(egt.plugins.multiversionRoot)
 }
 
 preprocess {

@@ -6,12 +6,12 @@ import gg.essential.gradle.util.noServerRunConfigs
 
 plugins {
     alias(libs.plugins.kotlin)
+    id(egt.plugins.multiversion.get().pluginId)
+    id(egt.plugins.defaults.get().pluginId)
     alias(libs.plugins.shadow)
     alias(libs.plugins.blossom)
     alias(libs.plugins.minotaur)
     alias(libs.plugins.cursegradle)
-    id("gg.essential.multi-version")
-    id("gg.essential.defaults")
 }
 
 val mod_name: String by project
