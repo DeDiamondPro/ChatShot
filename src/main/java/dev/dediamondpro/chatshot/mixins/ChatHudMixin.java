@@ -23,13 +23,12 @@ public abstract class ChatHudMixin implements ChatHudLocals {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;fill(IIIII)V", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
     
-
-    //#if MC < 12005
-    public void onDrawChatLine(DrawContext context, int currentTick, int mouseX, int mouseY, CallbackInfo ci, int i, int j, boolean bl, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, ChatHudLine.Visible visible, int t, double h, int u, int v) {
-    //#elseif MC < 12104
+    //#if MC >= 12104
+    public void onDrawChatLine(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, Profiler profiler, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, ChatHudLine.Visible visible, int t, double h, int u, int v) {
+    //#elseif MC >= 12005
     //$$ public void onDrawChatLine(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, ChatHudLine.Visible visible, int t, double h, int u, int v) {
     //#else
-    //$$ public void onDrawChatLine(DrawContext context, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, Profiler profiler, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, ChatHudLine.Visible visible, int t, double h, int u, int v) {
+    //$$ public void onDrawChatLine(DrawContext context, int currentTick, int mouseX, int mouseY, CallbackInfo ci, int i, int j, boolean bl, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, ChatHudLine.Visible visible, int t, double h, int u, int v) {
     //#endif
         // Collect some locals here that are used in ChatScreenMixin to draw the buttons,
         // we draw in the screen for Exordium compatibility,

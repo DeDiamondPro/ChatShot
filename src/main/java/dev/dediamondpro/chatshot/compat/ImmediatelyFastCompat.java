@@ -8,8 +8,10 @@ public class ImmediatelyFastCompat implements ICompatHandler {
 
     @Override
     public void drawChatHud() {
-        if (api.getBatching().isHudBatching()) {
-            api.getBatching().forceDrawBuffers();
-        }
+        //#if MC <= 12100
+        //$$ if (api.getBatching().isHudBatching()) {
+        //$$     api.getBatching().forceDrawBuffers();
+        //$$ }
+        //#endif
     }
 }

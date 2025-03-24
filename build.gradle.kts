@@ -6,12 +6,12 @@ import gg.essential.gradle.util.noServerRunConfigs
 
 plugins {
     alias(libs.plugins.kotlin)
-    id(egt.plugins.multiversion.get().pluginId)
-    id(egt.plugins.defaults.get().pluginId)
     alias(libs.plugins.shadow)
     alias(libs.plugins.blossom)
     alias(libs.plugins.minotaur)
     alias(libs.plugins.cursegradle)
+    id("gg.essential.multi-version")
+    id("gg.essential.defaults")
 }
 
 val mod_name: String by project
@@ -20,6 +20,8 @@ val mod_id: String by project
 
 preprocess {
     vars.put("MODERN", if (project.platform.mcMinor >= 16) 1 else 0)
+    println("Preprocessing with mcVersion = ${project.platform.mcVersion}")
+
 }
 
 blossom {
@@ -42,6 +44,9 @@ loom {
     if (project.platform.isForge) forge {
         mixinConfig("mixins.${mod_id}.json")
         mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
+    }
+    if (project.platform.isFabric && project.platform.mcVersion > 12100)  {
+        accessWidenerPath.set(file("src/main/resources/chatshot.accesswidener"))
     }
 }
 
@@ -68,6 +73,7 @@ dependencies {
     if (platform.isFabric) {
         val fabricApiVersion = when(project.platform.mcVersion) {
             12006 -> "0.100.4+1.20.6"
+            12104 -> "0.119.2+1.21.4"
             else -> null
         }
         fabricApiVersion?.let { modImplementation("net.fabricmc.fabric-api:fabric-api:$it") }
@@ -224,7 +230,7 @@ tasks {
 // First value is start of range, second value is end of range or null to leave the range open
 fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion) {
     12104 -> "1.21.4" to "1.21.4"
-    12100 -> "1.21" to null
+    12100 -> "1.21" to "1.21"
     12006 -> "1.20.5" to "1.20.6"
     12001 -> "1.20" to "1.20.4"
     else -> error("Undefined version range for ${platform.mcVersion}")

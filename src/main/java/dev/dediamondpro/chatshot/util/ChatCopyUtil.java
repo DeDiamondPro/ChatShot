@@ -4,30 +4,83 @@ import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
+import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.SimpleFramebuffer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderPhase;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.VertexConsumerProvider.Immediate;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.SpriteAtlasTexture;
+import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
+
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
+import org.lwjgl.stb.STBIWriteCallback;
+import org.lwjgl.stb.STBImageWrite;
+
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.TextureUtil;
+import com.mojang.blaze3d.systems.RenderSystem;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.*;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class ChatCopyUtil {
 
+    static public boolean tracking = false;
+            //#if MC >= 12104
+            //         return of("text", VertexFormats.POSITION_COLOR_TEXTURE_LIGHT, DrawMode.QUADS, 786432, false, false, net.minecraft.client.render.RenderLayer.MultiPhaseParameters.builder().program(TEXT_PROGRAM).texture(new RenderPhase.Texture(identifier, TriState.FALSE, false)).transparency(TRANSLUCENT_TRANSPARENCY).lightmap(ENABLE_LIGHTMAP).build(false));
+
+            static public RenderLayer CUSTOM_TEXT_LAYER = RenderLayer.of(
+                "chatshot_text",
+                VertexFormats.POSITION_COLOR_TEXTURE_LIGHT,
+                VertexFormat.DrawMode.QUADS,
+                786432,
+                RenderLayer.MultiPhaseParameters.builder()
+                    // Match the TEXT layer's settings except for the framebuffer
+                    .program(RenderPhase.TEXT_PROGRAM)
+                    .transparency(RenderPhase.TRANSLUCENT_TRANSPARENCY)
+                    .lightmap(RenderPhase.ENABLE_LIGHTMAP)
+                    .cull(RenderPhase.DISABLE_CULLING)
+                    .layering(RenderPhase.VIEW_OFFSET_Z_LAYERING)
+                    // Override the Target phase to bind your framebuffer
+                    .target(new RenderPhase.Target("chatshot_fbo", () -> {
+                    }, () -> {})) // No cleanup needed (handled elsewhere)
+                    .build(false));
+
+            //#endif
     public static void copy(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         if (GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
@@ -41,10 +94,10 @@ public class ChatCopyUtil {
     public static void copyString(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
         for (ChatHudLine.Visible line : lines) {
-            //#if MC < 12100 || FABRIC == 0
-            line.content().accept(visitor);
+            //#if MC >= 12100 && FABRIC == 1
+            line.comp_896().accept(visitor);
             //#else
-            //$$ line.comp_896().accept(visitor);
+            //$$line.content().accept(visitor);
             //#endif
         }
         client.keyboard.setClipboard(visitor.collect());
@@ -52,7 +105,23 @@ public class ChatCopyUtil {
             client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.text.success"));
         }
     }
-
+    public static class TestProvider extends VertexConsumerProvider.Immediate {
+        private RenderLayer currentLayer = CUSTOM_TEXT_LAYER;
+        public BufferBuilder bufferBuilder;
+        private TestProvider(BufferAllocator bufferAllocator) {
+            super(bufferAllocator, Object2ObjectSortedMaps.emptyMap());
+            this.bufferBuilder = new BufferBuilder(this.allocator, CUSTOM_TEXT_LAYER.getDrawMode(), CUSTOM_TEXT_LAYER.getVertexFormat());
+        }
+        @Override
+        public VertexConsumer getBuffer(RenderLayer renderLayer)
+        {
+            return this.bufferBuilder;
+        }
+        public void draw2() {
+            this.pending.put(this.currentLayer, this.bufferBuilder);
+            this.draw(this.currentLayer);
+        }
+    }
     public static void copyImage(List<ChatHudLine.Visible> lines, MinecraftClient client) {
         boolean shadow = Config.INSTANCE.shadow;
         int scaleFactor = Config.INSTANCE.scale;
@@ -60,14 +129,14 @@ public class ChatCopyUtil {
         // Force mods doing things like hud-batching to draw immediately before we start messing with framebuffers
         CompatCore.INSTANCE.drawChatHud();
 
-        DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
+        // DrawContext context = new DrawContext(client, client.getBufferBuilders().getEntityVertexConsumers());
         int width = 0;
         for (ChatHudLine.Visible line : lines) {
             OrderedText content =
-            //#if MC < 12100 || FABRIC == 0
-                    line.content();
+            //#if MC >= 12100 && FABRIC == 1
+            line.comp_896();
             //#else
-            //$$    line.comp_896();
+            //$$    line.content();
             //#endif
             width = Math.max(width, client.textRenderer.getWidth(content));
         }
@@ -80,30 +149,37 @@ public class ChatCopyUtil {
             client.inGameHud.getChatHud().addMessage(Text.translatable("chatshot.noMessageFound"));
             return;
         }
+        TestProvider customConsumer = new TestProvider(new BufferAllocator(256));
+        customConsumer.getBuffer(CUSTOM_TEXT_LAYER);
+        DrawContext context = new DrawContext(client, customConsumer);
 
         context.getMatrices().scale((float) client.getWindow().getScaledWidth() / width, (float) client.getWindow().getScaledHeight() / height, 1f);
         fb.beginWrite(false);
         int y = 0;
         for (ChatHudLine.Visible line : lines) {
             OrderedText content =
-            //#if MC < 12100 || FABRIC == 0
-                    line.content();
+            //#if MC >= 12100 && FABRIC == 1
+            line.comp_896();
             //#else
-            //$$    line.comp_896();
+            //$$    line.content();
             //#endif
+            tracking = true; // Set tracking to true to avoid any issues with mods that track mouse input
             context.drawText(client.textRenderer, content, 0, y, 0xFFFFFF, shadow);
+            tracking = false;
             y += 9;
         }
+
         // Force mods doing things like hud-batching to draw immediately
         CompatCore.INSTANCE.drawChatHud();
+        context.draw();
+        customConsumer.draw2();
         fb.endWrite();
-
         try (NativeImage nativeImage = ScreenshotRecorder.takeScreenshot(fb)) {
-            //#if MC < 12104
-            BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
+            //#if MC >= 12104
+            nativeImage.writeTo(new File("screenshots/temp.png")); // Save the image to a temporary file to read it
+            BufferedImage image = ImageIO.read(new File("screenshots/temp.png"));
             //#else
-            //$$ nativeImage.writeTo(new File("screenshots/temp.png")); // Save the image to a temporary file to read it
-            //$$ BufferedImage image = ImageIO.read(new File("screenshots/temp.png"));
+            //$$ BufferedImage image = ImageIO.read(new ByteArrayInputStream(nativeImage.getBytes()));
             //#endif
 
             BufferedImage transparentImage = imageToBufferedImage(makeColorTransparent(image, new Color(0x36, 0x39, 0x3F)));
@@ -131,7 +207,6 @@ public class ChatCopyUtil {
         }
         client.getFramebuffer().beginWrite(true);
     }
-
     private static File getScreenshotFilename(File directory) {
         String string = Util.getFormattedCurrentTime();
         int i = 1;
@@ -143,14 +218,15 @@ public class ChatCopyUtil {
     }
 
     private static Framebuffer createBuffer(int width, int height) {
-        //#if MC <= 12100 || FABRIC == 0
-            Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
-            fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
-            fb.clear(false);
+          
+        //#if MC > 12100 && FABRIC == 1
+        Framebuffer fb = new SimpleFramebuffer(width, height, true);
+        fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
+        fb.clear();
         //#else
-        //$$ Framebuffer fb = new SimpleFramebuffer(width, height, true);
-        //$$ fb.setClearColor(0f, 0f, 0f, 0f);
-        //$$ fb.clear();
+        //$$ Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
+        //$$ fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
+        //$$ fb.clear(false);
         //#endif
         return fb;
     }

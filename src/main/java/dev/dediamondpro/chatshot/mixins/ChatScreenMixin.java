@@ -67,10 +67,10 @@ public abstract class ChatScreenMixin extends Screen {
         context.getMatrices().push();
         context.getMatrices().scale(chatScale, chatScale, 1f);
         context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF | color : color);
-        //#if MC < 12104
-        context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
+        //#if MC >= 12104
+        context.drawTexture(RenderLayer::getGuiTextured, Textures.COPY, scaledButtonX,scaledButtonY, 0, 0, 9, 9, 9, 9);
         //#else
-        //$$ context.drawTexture((identifier) -> RenderLayer.getGuiOverlay(), Textures.COPY, scaledButtonX,scaledButtonY, 0, 0, 9, 9, 9, 9);
+        //$$ context.drawTexture(Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
         //#endif
         context.getMatrices().pop();
 
@@ -89,10 +89,10 @@ public abstract class ChatScreenMixin extends Screen {
             // Collect all lines of the message
             messageParts.add(visibleMessages.get(messageIndex));
             for (int i = messageIndex + 1; i < visibleMessages.size(); i++) {
-                //#if MC < 12100 || FABRIC == 0
-                if (visibleMessages.get(i).endOfEntry()) break;
+                //#if MC >= 12100 && FABRIC == 1
+                if (visibleMessages.get(i).comp_898()) break;
                 //#else
-                //$$ if (visibleMessages.get(i).comp_898()) break;
+                //$$ if (visibleMessages.get(i).endOfEntry()) break;
                 //#endif
                 messageParts.add(0, visibleMessages.get(i));
             }
@@ -109,10 +109,10 @@ public abstract class ChatScreenMixin extends Screen {
         int color = this.client.options.getTextBackgroundColor(Integer.MIN_VALUE);
         context.fill(buttonX, buttonY, buttonX + 10, buttonY + 10, hovering ? 0xFFFFFF + color : color);
         // context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
-        //#if MC < 12104 
-        context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        //#if MC >= 12104
+        context.drawTexture(RenderLayer::getGuiTextured,  Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10); 
         //#else
-        //$$ context.drawTexture((identifier) -> RenderLayer.getGuiOverlay(),  Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        //$$ context.drawTexture(Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
         //#endif
         if (hovering && Config.INSTANCE.tooltip) {
             ArrayList<Text> tooltip = new ArrayList<>();

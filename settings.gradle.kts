@@ -9,7 +9,7 @@ pluginManagement {
         maven("https://maven.dediamondpro.dev/releases")
         maven("https://repo.polyfrost.org/releases")
     }
-    val egtVersion = "0.6.0+diamond.neofix"
+    val egtVersion = "0.6.6"
     plugins {
         id("gg.essential.multi-version.root") version egtVersion
     }
