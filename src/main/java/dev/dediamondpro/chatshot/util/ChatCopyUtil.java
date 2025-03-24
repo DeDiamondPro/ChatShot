@@ -232,6 +232,10 @@ public class ChatCopyUtil {
         Framebuffer fb = new SimpleFramebuffer(width, height, true);
         fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
         fb.clear();
+        //#elseif MC > 12100
+        //$$ RenderTarget fb = new TextureTarget(width, height, true);
+        //$$ fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
+        //$$ fb.clear();
         //#else
         //$$ Framebuffer fb = new SimpleFramebuffer(width, height, true, false);
         //$$ fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);

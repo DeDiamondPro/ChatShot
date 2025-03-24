@@ -46,6 +46,9 @@ loom {
     if (project.platform.isFabric && project.platform.mcVersion > 12100)  {
         accessWidenerPath.set(file("src/main/resources/chatshot.accesswidener"))
     }
+    if (project.platform.isNeoForge) neoForge {
+        accessTransformers.files.add(file("src/main/resources/META-INF/accesstransformer.cfg"))
+    }
 }
 
 repositories {
