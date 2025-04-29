@@ -78,6 +78,7 @@ dependencies {
         val fabricApiVersion = when(project.platform.mcVersion) {
             12006 -> "0.100.4+1.20.6"
             12104 -> "0.119.2+1.21.4"
+            12105 -> "0.121.0+1.21.5"
             else -> null
         }
         fabricApiVersion?.let { modImplementation("net.fabricmc.fabric-api:fabric-api:$it") }
@@ -233,6 +234,7 @@ tasks {
 // Function to get the range of mc versions supported by a version we are building for.
 // First value is start of range, second value is end of range or null to leave the range open
 fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion) {
+    12105 -> "1.21.5" to "1.21.5"
     12104 -> "1.21.4" to "1.21.4"
     12100 -> "1.21" to "1.21"
     12006 -> "1.20.5" to "1.20.6"
@@ -243,6 +245,7 @@ fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion
 fun getPrettyVersionRange(): String {
     val supportedVersionRange = getSupportedVersionRange()
     return when {
+        platform.mcVersion == 12105 -> "1.21.5"
         platform.mcVersion == 12104 -> "1.21.4"
         platform.mcVersion == 12100 -> "1.21"
         platform.mcVersion == 12006 -> "1.20.6"
@@ -252,6 +255,7 @@ fun getPrettyVersionRange(): String {
 }
 
 fun getFabricMcVersionRange(): String {
+    if (platform.mcVersion == 12105) return "1.21.5"
     if (platform.mcVersion == 12104) return "1.21.4"
     if (platform.mcVersion == 12100) return "1.21"
     val supportedVersionRange = getSupportedVersionRange()
@@ -270,6 +274,7 @@ fun getSupportedVersionList(): List<String> {
     return when (supportedVersionRange.first) {
         "1.21" -> listOf("1.21")
         "1.21.4" -> listOf("1.21.4")
+        "1.21.5" -> listOf("1.21.5")
         else -> {
             val minorVersion = supportedVersionRange.first.let {
                 if (it.count { c -> c == '.' } == 1) it else it.substringBeforeLast(".")
