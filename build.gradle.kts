@@ -22,6 +22,7 @@ repositories {
     mavenCentral()
     maven("https://maven.fabricmc.net")
     maven("https://maven.parchmentmc.org")
+    maven("https://api.modrinth.com/maven")
     maven("https://maven.minecraftforge.net")
     maven("https://maven.isxander.dev/releases")
     maven("https://maven.neoforged.net/releases/")
@@ -68,6 +69,10 @@ val yaclVersion = VersionDefinition(
     "1.21.4-fabric" to "3.6.6+1.21.4-fabric",
     "1.21.4-neoforge" to "3.6.6+1.21.4-neoforge"
 )
+val noChatReportsVersion = VersionDefinition(
+    "1.21.4-fabric" to "Fabric-1.21.4-v2.11.0",
+    "1.21.4-neoforge" to "NeoForge-1.21.4-v2.11.0",
+)
 
 dependencies {
     minecraft("com.mojang:minecraft:${mcPlatform.versionString}")
@@ -91,6 +96,11 @@ dependencies {
 
     modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}")
     compileOnly(libs.objc)
+
+    // Compat mods
+    noChatReportsVersion.getOrNull(mcPlatform)?.let {
+        modCompileOnly("maven.modrinth:no-chat-reports:${it}")
+    }
 }
 
 loom {
