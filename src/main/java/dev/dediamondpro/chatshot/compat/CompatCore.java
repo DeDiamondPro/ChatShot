@@ -10,8 +10,8 @@ public class CompatCore {
 
     private CompatCore() {
         ArrayList<Supplier<ICompatHandler>> compatHandlerFactories = new ArrayList<>() {{
-            add(NoChatReportsCompat::new);
-            add(ImmediatelyFastCompat::new);
+            // add(NoChatReportsCompat::new);
+            // add(ImmediatelyFastCompat::new);
         }};
 
         for (Supplier<ICompatHandler> handler : compatHandlerFactories) {

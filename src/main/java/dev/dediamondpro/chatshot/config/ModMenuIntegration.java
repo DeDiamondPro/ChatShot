@@ -1,6 +1,6 @@
 package dev.dediamondpro.chatshot.config;
 
-//#if FABRIC == 1
+//? if fabric {
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
@@ -12,4 +12,4 @@ public class ModMenuIntegration implements ModMenuApi {
         return ConfigHelper::createScreen;
     }
 }
-//#endif
+//?}

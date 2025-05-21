@@ -1,26 +1,26 @@
 package dev.dediamondpro.chatshot.mixins;
 
-import net.minecraft.client.gui.hud.ChatHud;
-import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.components.ChatComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 import java.util.List;
 
-@Mixin(ChatHud.class)
+@Mixin(ChatComponent.class)
 public interface ChatHudAccessor {
 
-    @Accessor
+    @Accessor("chatScrollbarPos")
     int getScrolledLines();
 
-    @Accessor
-    List<ChatHudLine.Visible> getVisibleMessages();
+    @Accessor("trimmedMessages")
+    List<GuiMessage.Line> getVisibleMessages();
 
-    @Invoker("getMessageIndex")
+    @Invoker("getMessageEndIndexAt")
     int getMessageIndexA(double chatLineX, double chatLineY);
 
-    @Invoker("toChatLineY")
+    @Invoker("screenToChatY")
     double toChatLineYA(double y);
 
     @Invoker("getLineHeight")

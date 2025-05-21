@@ -31,11 +31,11 @@
   "environment": "client",
   "depends": {
     "fabricloader": ">=0.14.0",
-    "minecraft": "${fabricMcVersion}",
-    "fabric-resource-loader-v0": "*"
+    "minecraft": "${mcVersion}",
+    "fabric-resource-loader-v0": "*",
+    "yet_another_config_lib_v3": "*"
   },
   "recommends": {
-    "yet_another_config_lib_v3": "*",
     "modmenu": "*"
   }
 }

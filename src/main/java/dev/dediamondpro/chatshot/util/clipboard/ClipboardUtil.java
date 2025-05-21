@@ -1,6 +1,6 @@
 package dev.dediamondpro.chatshot.util.clipboard;
 
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.platform.MacosUtil;
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -14,7 +14,7 @@ public class ClipboardUtil {
     }
 
     public static boolean copy(Transferable transferable) {
-        if (MinecraftClient.IS_SYSTEM_MAC) return false;
+        if (MacosUtil.IS_MACOS) return false;
         try {
             Clipboard c = Toolkit.getDefaultToolkit().getSystemClipboard();
             c.setContents(transferable, null);

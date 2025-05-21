@@ -1,4 +1,4 @@
-package dev.dediamondpro.chatshot.compat;
+/*package dev.dediamondpro.chatshot.compat;
 
 import net.raphimc.immediatelyfastapi.ApiAccess;
 import net.raphimc.immediatelyfastapi.ImmediatelyFastApi;
@@ -14,4 +14,4 @@ public class ImmediatelyFastCompat implements ICompatHandler {
         //$$ }
         //#endif
     }
-}
+}*/

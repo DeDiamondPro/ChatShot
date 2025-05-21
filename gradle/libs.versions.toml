@@ -1,42 +1,25 @@
 [versions]
-# Kotlin
-kotlin = "1.9.23"
-
 # Config
 yacl = "3.1.1+1.20"
-modMenu = "7.2.1"
 
-# Publishing
-minotaur = "2.8.0"
-cursegradle = "1.4.0"
+# Build system
+arch_loom = "1.10-SNAPSHOT"
+shadow = "8.1.1"
+publishing = "0.8.3"
 
 # Misc
-shadow = "8.1.1"
-blossom = "1.3.2"
-devAuth = "1.2.1"
 objc = "1.2"
 
 [libraries]
 # Config
 yacl_fabric = { module = "dev.isxander.yacl:yet-another-config-lib-fabric", version.ref = "yacl" }
 yacl_forge = { module = "dev.isxander.yacl:yet-another-config-lib-forge", version.ref = "yacl" }
-modMenu = { module = "com.terraformersmc:modmenu", version.ref = "modMenu" }
-
-# devAuth
-devAuth_fabric = { module = "me.djtheredstoner:DevAuth-fabric", version.ref = "devAuth" }
-devAuth_forge = { module = "me.djtheredstoner:DevAuth-forge-latest", version.ref = "devAuth" }
 
 # MacOs
 objc = { module = "ca.weblite:java-objc-bridge", version.ref = "objc" }
 
 [plugins]
-# Kotlin
-kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-
-# Publishing
-minotaur = { id = "com.modrinth.minotaur", version.ref = "minotaur" }
-cursegradle = { id = "com.matthewprenger.cursegradle", version.ref = "cursegradle" }
-
-# Misc
+# Build system
+arch_loom = { id = "dev.architectury.loom", version.ref = "arch_loom" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
-blossom = { id = "net.kyori.blossom", version.ref = "blossom" }
+publishing = { id = "me.modmuss50.mod-publish-plugin", version.ref = "publishing" }

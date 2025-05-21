@@ -1,290 +1,193 @@
-import com.matthewprenger.cursegradle.CurseArtifact
-import com.matthewprenger.cursegradle.CurseProject
-import com.matthewprenger.cursegradle.CurseRelation
-import com.matthewprenger.cursegradle.Options
-import gg.essential.gradle.util.noServerRunConfigs
+import dev.dediamondpro.buildsource.Platform
+import dev.dediamondpro.buildsource.VersionDefinition
+import dev.dediamondpro.buildsource.VersionRange
 
 plugins {
-    alias(libs.plugins.kotlin)
-    id(egt.plugins.multiversion.get().pluginId)
-    id(egt.plugins.defaults.get().pluginId)
-    alias(libs.plugins.shadow)
-    alias(libs.plugins.blossom)
-    alias(libs.plugins.minotaur)
-    alias(libs.plugins.cursegradle)
+    alias(libs.plugins.arch.loom)
+    alias(libs.plugins.publishing)
 }
+
+buildscript {
+    // Set loom platform to correct loader
+    extra["loom.platform"] = project.name.split('-')[1]
+}
+
+val mcPlatform = Platform.fromProject(project)
 
 val mod_name: String by project
 val mod_version: String by project
 val mod_id: String by project
 
-preprocess {
-    vars.put("MODERN", if (project.platform.mcMinor >= 16) 1 else 0)
-}
-
-blossom {
-    replaceToken("@NAME@", mod_name)
-    replaceToken("@ID@", mod_id)
-    replaceToken("@VER@", mod_version)
-}
-
-version = mod_version
-group = "dev.dediamondpro"
-base {
-    archivesName.set("$mod_name (${getPrettyVersionRange()}-${platform.loaderStr})")
-}
-
-loom.noServerRunConfigs()
-loom {
-    if (project.platform.isLegacyForge) runConfigs {
-        "client" { programArgs("--tweakClass", "org.spongepowered.asm.launch.MixinTweaker") }
-    }
-    if (project.platform.isForge) forge {
-        mixinConfig("mixins.${mod_id}.json")
-        mixin.defaultRefmapName.set("mixins.${mod_id}.refmap.json")
-        if (project.platform.mcVersion > 12100){
-            accessTransformer(file("src/main/resources/META-INF/accesstransformer.cfg"))
-        }
-    }
-    if (project.platform.isFabric && project.platform.mcVersion > 12100)  {
-        accessWidenerPath.set(rootProject.file("src/main/resources/chatshot.accesswidener"))
-    }
-    if (project.platform.isNeoForge) neoForge {
-        accessTransformers.files.add(file("src/main/resources/META-INF/accesstransformer.cfg"))
-    }
-}
-
 repositories {
-    maven("https://maven.terraformersmc.com/releases/")
-    maven("https://repo.essential.gg/repository/maven-public/")
-    maven("https://maven.dediamondpro.dev/releases")
-    maven("https://maven.isxander.dev/releases")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-    maven("https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1")
-    maven("https://api.modrinth.com/maven")
-    maven("https://maven.neoforged.net/releases/")
     mavenCentral()
+    maven("https://maven.fabricmc.net")
+    maven("https://maven.parchmentmc.org")
+    maven("https://maven.minecraftforge.net")
+    maven("https://maven.isxander.dev/releases")
+    maven("https://maven.neoforged.net/releases/")
+    maven("https://maven.dediamondpro.dev/releases")
+    maven("https://maven.terraformersmc.com/releases/")
+    maven("https://thedarkcolour.github.io/KotlinForForge/")
 }
 
-val shade: Configuration by configurations.creating {
-    configurations.implementation.get().extendsFrom(this)
+stonecutter {
+    const("fabric", mcPlatform.isFabric)
+    const("forge", mcPlatform.isForge)
+    const("neoforge", mcPlatform.isNeoForge)
+    const("forgelike", mcPlatform.isForgeLike)
+
+    swap("mod_name", "\"$mod_name\"")
+    swap("mod_id", "\"$mod_id\"")
+    swap("mod_version", "\"$mod_version\"")
 }
+
+val mcVersion = VersionDefinition(
+    "1.21.4" to VersionRange("1.21.3", "1.21.4", name = "1.21.4"),
+)
+val parchmentVersion = VersionDefinition(
+    "1.20.1" to "1.20.1:2023.09.03",
+    "1.21.1" to "1.21.1:2024.11.17",
+    "1.21.4" to "1.21.4:2025.02.16"
+)
+val fabricApiVersion = VersionDefinition(
+    "1.20.1" to "0.92.3+1.20.1",
+    "1.21.1" to "0.114.0+1.21.1",
+    "1.21.4" to "0.118.0+1.21.4",
+    "1.21.5" to "0.119.4+1.21.5",
+)
+val modMenuVersion = VersionDefinition(
+    "1.20.1" to "7.2.2",
+    "1.21.1" to "11.0.3",
+    "1.21.4" to "13.0.2",
+    "1.21.5" to "14.0.0-rc.2",
+)
+val neoForgeVersion = VersionDefinition(
+    "1.21.4" to "21.4.124",
+)
+val yaclVersion = VersionDefinition(
+    "1.21.4-fabric" to "3.6.6+1.21.4-fabric",
+    "1.21.4-neoforge" to "3.6.6+1.21.4-neoforge"
+)
 
 dependencies {
-    compileOnly(libs.objc)
-    modCompileOnly("maven.modrinth:no-chat-reports:Fabric-1.20.1-v2.2.2")
-    modCompileOnly("maven.modrinth:immediatelyfast:1.2.18+1.20.4-fabric")
-    if (platform.isFabric) {
-        val fabricApiVersion = when(project.platform.mcVersion) {
-            12006 -> "0.100.4+1.20.6"
-            12104 -> "0.119.2+1.21.4"
-            else -> null
+    minecraft("com.mojang:minecraft:${mcPlatform.versionString}")
+
+    @Suppress("UnstableApiUsage")
+    mappings(loom.layered {
+        officialMojangMappings()
+        parchmentVersion.getOrNull(mcPlatform)?.let {
+            parchment("org.parchmentmc.data:parchment-$it@zip")
         }
-        fabricApiVersion?.let { modImplementation("net.fabricmc.fabric-api:fabric-api:$it") }
-        modCompileOnly(libs.yacl.fabric) {
-            isTransitive = false
-        }
-        modCompileOnly(libs.modMenu)
-        modRuntimeOnly(libs.devAuth.fabric)
-    } else {
-        modCompileOnly(libs.yacl.forge) {
-            isTransitive = false
-        }
-        modRuntimeOnly(libs.devAuth.forge)
+    })
+
+    if (mcPlatform.isFabric) {
+        modImplementation("net.fabricmc:fabric-loader:0.16.10")
+
+        modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
+        modImplementation("com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
+    } else if (mcPlatform.isNeoForge) {
+        "neoForge"("net.neoforged:neoforge:${neoForgeVersion.get(mcPlatform)}")
     }
+
+    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}")
+    compileOnly(libs.objc)
 }
 
-tasks.processResources {
-    inputs.property("id", mod_id)
-    inputs.property("name", mod_name)
-    inputs.property("version", mod_version)
-    inputs.property("fabricMcVersion", getFabricMcVersionRange())
-    inputs.property("forgeMcVersion", getForgeMcVersionRange())
-    filesMatching(listOf("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "fabric.mod.json")) {
-        expand(
-            mapOf(
-                "id" to mod_id,
-                "name" to mod_name,
-                "version" to mod_version,
-                "fabricMcVersion" to getFabricMcVersionRange(),
-                "forgeMcVersion" to getForgeMcVersionRange(),
-            )
-        )
+loom {
+    accessWidenerPath = rootProject.file("src/main/resources/chatshot.accesswidener")
+
+    if (mcPlatform.isForge) forge {
+        convertAccessWideners.set(true)
+        mixinConfig("mixins.resourcify.json")
+    }
+
+    runConfigs["client"].isIdeConfigGenerated = true
+}
+
+base.archivesName.set(
+    "$mod_name (${
+        mcVersion.get(mcPlatform).getName().replace("/", "-")
+    }-${mcPlatform.loaderString})-$mod_version"
+)
+
+publishMods {
+    file.set(tasks.remapJar.get().archiveFile)
+    displayName.set("[${mcVersion.get(mcPlatform).getName()}-${mcPlatform.loaderString}] $mod_name $mod_version")
+    version.set(mod_version)
+    changelog.set(rootProject.file("changelog.md").readText())
+    type.set(STABLE)
+
+    modLoaders.add(mcPlatform.loaderString)
+    if (mcPlatform.isFabric) modLoaders.add("quilt")
+
+    curseforge {
+        projectId.set("908966")
+        accessToken.set(System.getenv("CURSEFORGE_TOKEN"))
+
+        minecraftVersionRange {
+            start = mcVersion.get(mcPlatform).startVersion
+            end = mcVersion.get(mcPlatform).endVersion
+        }
+
+        if (mcPlatform.isFabric) {
+            requires("fabric-api", "yacl")
+        } else if (mcPlatform.isForgeLike) {
+            requires("yacl")
+        }
+    }
+    modrinth {
+        projectId.set("X2Zy7Oi6")
+        accessToken.set(System.getenv("MODRINTH_TOKEN"))
+
+        minecraftVersionRange {
+            start = mcVersion.get(mcPlatform).startVersion
+            end = mcVersion.get(mcPlatform).endVersion
+        }
+
+        if (mcPlatform.isFabric) {
+            requires("fabric-api", "yacl")
+        } else if (mcPlatform.isForgeLike) {
+            requires("yacl")
+        }
     }
 }
 
 tasks {
-    withType<Jar> {
-        if (project.platform.isFabric) {
-            exclude("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "pack.mcmeta")
-        } else {
-            exclude("fabric.mod.json")
-            if (project.platform.isLegacyForge) {
-                exclude("mods.toml", "META-INF/neoforge.mods.toml")
-            } else if (platform.isForge) {
-                exclude("mcmod.info", "META-INF/neoforge.mods.toml")
-            } else if (platform.isNeoForge) {
-                exclude("mcmod.info", "META-INF/mods.toml")
-            }
-        }
-        from(rootProject.file("LICENSE"))
-        from(rootProject.file("LICENSE.LESSER"))
-    }
-    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
-        archiveClassifier.set(if (platform.isForge && platform.mcVersion >= 12100) "" else "dev")
-        configurations = listOf(shade)
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-        if (platform.isForge && platform.mcVersion >= 12100) {
-            exclude("mixins.${mod_id}.refmap.json")
-        }
-    }
     remapJar {
-        if (platform.isForge && platform.mcVersion >= 12100) {
-            enabled = false
-        }
-
-        input.set(shadowJar.get().archiveFile)
-        archiveClassifier.set("")
         finalizedBy("copyJar")
-    }
-    jar {
-        if (project.platform.isLegacyForge) {
-            manifest {
-                attributes(
-                    mapOf(
-                        "ModSide" to "CLIENT",
-                        "TweakOrder" to "0",
-                        "TweakClass" to "org.spongepowered.asm.launch.MixinTweaker",
-                        "ForceLoadAsMod" to true
-                    )
-                )
-            }
+        if (mcPlatform.isNeoForge) {
+            atAccessWideners.add("chatshot.accesswidener")
         }
-        dependsOn(shadowJar)
-        archiveClassifier.set("")
-        enabled = false
     }
     register<Copy>("copyJar") {
         File("${project.rootDir}/jars").mkdir()
-        from(if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile)
+        from(remapJar.get().archiveFile)
         into("${project.rootDir}/jars")
     }
     clean { delete("${project.rootDir}/jars") }
-    project.modrinth {
-        token.set(System.getenv("MODRINTH_TOKEN"))
-        projectId.set("chatshot")
-        versionNumber.set(mod_version)
-        versionName.set("[${getPrettyVersionRange()}-${platform.loaderStr}] ChatShot $mod_version")
-        uploadFile.set(if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile)
-        gameVersions.addAll(getSupportedVersionList())
-        if (platform.isFabric) {
-            loaders.add("fabric")
-            loaders.add("quilt")
-        } else if (platform.isForge) {
-            loaders.add("forge")
-        } else if (platform.isNeoForge) {
-            loaders.add("neoforge")
+    processResources {
+        val properties = mapOf(
+            "id" to mod_id,
+            "name" to mod_name,
+            "version" to mod_version,
+            "mcVersion" to mcVersion.get(mcPlatform).getLoaderRange(mcPlatform),
+        )
+
+        properties.forEach { (k, v) -> inputs.property(k, v) }
+        filesMatching(listOf("mcmod.info", "META-INF/mods.toml", "META-INF/neoforge.mods.toml", "fabric.mod.json")) {
+            expand(properties)
         }
-        changelog.set(file("../../changelog.md").readText())
-        dependencies {
-            if (platform.isFabric) required.project("fabric-api")
-            required.project("yacl")
-        }
+
+        if (!mcPlatform.isFabric) exclude("fabric.mod.json")
+        if (!mcPlatform.isForgeLike) exclude("pack.mcmeta")
+        if (!mcPlatform.isNeoForge) exclude("META-INF/neoforge.mods.toml")
     }
-    project.curseforge {
-        project(closureOf<CurseProject> {
-            apiKey = System.getenv("CURSEFORGE_TOKEN")
-            id = "908966"
-            changelog = file("../../changelog.md")
-            changelogType = "markdown"
-            relations(closureOf<CurseRelation> {
-                if (platform.isFabric) requiredDependency("fabric-api")
-                requiredDependency("yacl")
-            })
-            gameVersionStrings.addAll(getSupportedVersionList())
-            if (platform.isFabric) {
-                addGameVersion("Fabric")
-                addGameVersion("Quilt")
-            } else if (platform.isForge) {
-                addGameVersion("Forge")
-            } else if (platform.isNeoForge) {
-                addGameVersion("NeoForge")
-            }
-            releaseType = "release"
-            mainArtifact(
-                if (platform.isForge && platform.mcVersion >= 12100) shadowJar.get().archiveFile else remapJar.get().archiveFile,
-                closureOf<CurseArtifact> {
-                    displayName = "[${getPrettyVersionRange()}-${platform.loaderStr}] ChatShot $mod_version"
-                })
-        })
-        options(closureOf<Options> {
-            javaVersionAutoDetect = false
-            javaIntegration = false
-            forgeGradleIntegration = false
-        })
-    }
-    register("publish") {
-        dependsOn(modrinth)
-        dependsOn(curseforge)
+    withType<Jar> {
+        from(rootProject.file("LICENSE"))
+        from(rootProject.file("LICENSE.LESSER"))
     }
 }
 
-// Function to get the range of mc versions supported by a version we are building for.
-// First value is start of range, second value is end of range or null to leave the range open
-fun getSupportedVersionRange(): Pair<String, String?> = when (platform.mcVersion) {
-    12104 -> "1.21.4" to "1.21.4"
-    12100 -> "1.21" to "1.21"
-    12006 -> "1.20.5" to "1.20.6"
-    12001 -> "1.20" to "1.20.4"
-    else -> error("Undefined version range for ${platform.mcVersion}")
-}
-
-fun getPrettyVersionRange(): String {
-    val supportedVersionRange = getSupportedVersionRange()
-    return when {
-        platform.mcVersion == 12104 -> "1.21.4"
-        platform.mcVersion == 12100 -> "1.21"
-        platform.mcVersion == 12006 -> "1.20.6"
-        supportedVersionRange.first == supportedVersionRange.second -> supportedVersionRange.first
-        else -> "${supportedVersionRange.first}${supportedVersionRange.second?.let { "-$it" } ?: "+"}"
-    }
-}
-
-fun getFabricMcVersionRange(): String {
-    if (platform.mcVersion == 12104) return "1.21.4"
-    if (platform.mcVersion == 12100) return "1.21"
-    val supportedVersionRange = getSupportedVersionRange()
-    if (supportedVersionRange.first == supportedVersionRange.second) return supportedVersionRange.first
-    return ">=${supportedVersionRange.first}${supportedVersionRange.second?.let { " <=$it" } ?: ""}"
-}
-
-fun getForgeMcVersionRange(): String {
-    val supportedVersionRange = getSupportedVersionRange()
-    if (supportedVersionRange.first == supportedVersionRange.second) return "[${supportedVersionRange.first}]"
-    return "[${supportedVersionRange.first},${supportedVersionRange.second?.let { "$it]" } ?: ")"}"
-}
-
-fun getSupportedVersionList(): List<String> {
-    val supportedVersionRange = getSupportedVersionRange()
-    return when (supportedVersionRange.first) {
-        "1.21" -> listOf("1.21")
-        "1.21.4" -> listOf("1.21.4")
-        else -> {
-            val minorVersion = supportedVersionRange.first.let {
-                if (it.count { c -> c == '.' } == 1) it else it.substringBeforeLast(".")
-            }
-            val start = supportedVersionRange.first.let {
-                if (it.count { c -> c == '.' } == 1) 0 else it.substringAfterLast(".").toInt()
-            }
-            val end = supportedVersionRange.second!!.let {
-                if (it.count { c -> c == '.' } == 1) 0 else it.substringAfterLast(".").toInt()
-            }
-            val versions = mutableListOf<String>()
-            for (i in start..end) {
-                versions.add("$minorVersion${if (i == 0) "" else ".$i"}")
-            }
-            versions
-        }
-    }
+configure<JavaPluginExtension> {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }

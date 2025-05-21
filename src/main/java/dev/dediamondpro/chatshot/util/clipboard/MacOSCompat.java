@@ -2,7 +2,7 @@ package dev.dediamondpro.chatshot.util.clipboard;
 
 import ca.weblite.objc.Client;
 import ca.weblite.objc.Proxy;
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.platform.MacosUtil;
 
 /*
  * Adapted from https://github.com/comp500/ScreenshotToClipboard under MIT license
@@ -14,7 +14,7 @@ public class MacOSCompat {
     // Thanks to @juliand665 for writing and testing most of this code, I don't have a Mac!
 
     public static boolean doCopyMacOS(String path) {
-        if (!MinecraftClient.IS_SYSTEM_MAC) {
+        if (!MacosUtil.IS_MACOS) {
             return false;
         }
 

@@ -14,14 +14,14 @@ logoFile="chatshot-128x.png"
 [[dependencies.chatshot]]
 modId="minecraft"
 mandatory=true
-versionRange="${forgeMcVersion}"
+versionRange="${mcVersion}"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.chatshot]]
 modId="yet_another_config_lib_v3"
 versionRange="[3.0.0,)"
-mandatory=false
+mandatory=true
 side="CLIENT"
 
 [[mixins]]

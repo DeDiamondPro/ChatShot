@@ -1,9 +1,9 @@
 package dev.dediamondpro.chatshot.util;
 
-import net.minecraft.text.CharacterVisitor;
-import net.minecraft.text.Style;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSink;
 
-public class CollectingCharacterVisitor implements CharacterVisitor {
+public class CollectingCharacterVisitor implements FormattedCharSink {
     private final StringBuilder builder = new StringBuilder();
 
     @Override
