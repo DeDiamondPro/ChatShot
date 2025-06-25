@@ -183,7 +183,7 @@ public class ChatCopyUtil {
     }
 
     private static RenderTarget createBuffer(int width, int height) {
-        RenderTarget fb = new TextureTarget(width, height, true);
+        RenderTarget fb = new TextureTarget(/*?if >1.21.5 {*/ "ChatShot FBO", /*?}*/ width, height, true);
         fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
         fb.clear();
         return fb;

@@ -44,6 +44,7 @@ stonecutter {
 
 val mcVersion = VersionDefinition(
     "1.21.4" to VersionRange("1.21.3", "1.21.4", name = "1.21.4"),
+    "1.21.5" to VersionRange("1.21.5", "1.21.5", name = "1.21.5"),
 )
 val parchmentVersion = VersionDefinition(
     "1.20.1" to "1.20.1:2023.09.03",
@@ -64,14 +65,19 @@ val modMenuVersion = VersionDefinition(
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
+    "1.21.5" to "21.5.66-beta",
 )
 val yaclVersion = VersionDefinition(
     "1.21.4-fabric" to "3.6.6+1.21.4-fabric",
-    "1.21.4-neoforge" to "3.6.6+1.21.4-neoforge"
+    "1.21.4-neoforge" to "3.6.6+1.21.4-neoforge",
+    "1.21.5-fabric" to "3.6.6+1.21.5-fabric",
+    "1.21.5-neoforge" to "3.6.6+1.21.5-neoforge"
 )
 val noChatReportsVersion = VersionDefinition(
     "1.21.4-fabric" to "Fabric-1.21.4-v2.11.0",
     "1.21.4-neoforge" to "NeoForge-1.21.4-v2.11.0",
+    "1.21.5-fabric" to "Fabric-1.21.5-v2.12.0",
+    "1.21.5-neoforge" to "NeoForge-1.21.5-v2.12.0",
 )
 
 dependencies {
