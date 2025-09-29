@@ -10,6 +10,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -21,7 +22,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
 import net.minecraft.Util;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -32,8 +32,7 @@ import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.*;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -52,7 +51,7 @@ public class ChatCopyUtil {
             RenderPipelines.TEXT,
             RenderType.CompositeState.builder().setTextureState(RenderStateShard.NO_TEXTURE)
                     .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> (rt)))
-            .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false)));
+                    .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false)));
 
     public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
         if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
@@ -81,7 +80,7 @@ public class ChatCopyUtil {
 
         private OverrideVertexProvider(ByteBufferBuilder bufferAllocator, RenderTarget rt) {
             super(bufferAllocator, Object2ObjectSortedMaps.emptyMap());
-            currentLayer = CUSTOM_TEXT_LAYER.apply(rt);
+            this.currentLayer = CUSTOM_TEXT_LAYER.apply(rt);
             this.bufferBuilder = new BufferBuilder(this.sharedBuffer, currentLayer.mode(), currentLayer.format());
         }
 
@@ -116,8 +115,8 @@ public class ChatCopyUtil {
         RenderTarget rt ;
 
         try {
-            fb = createBuffer(width * scaleFactor, height * scaleFactor, true);
-            rt = new TextureTarget("test", width*scaleFactor, height*scaleFactor, true);
+            rt = new TextureTarget(null, width*scaleFactor, height*scaleFactor, false);
+            fb = device.createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, width * scaleFactor * height * scaleFactor * rt.getColorTexture().getFormat().pixelSize());
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
             client.gui.getChat().addMessage(Component.translatable("chatshot.noMessageFound"));
@@ -125,7 +124,8 @@ public class ChatCopyUtil {
         }
         OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
         GuiGraphics context = new GuiGraphics(client, customConsumer);
-        cmd.clearColorAndDepthTextures(rt.getColorTexture(),new Color(0x36, 0x39, 0x3F).getRGB() , rt.getDepthTexture(), 1);
+        cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
+
         context.pose().scale(
                 (float) client.getWindow().getGuiScaledWidth() / width,
                 (float) client.getWindow().getGuiScaledHeight() / height,
@@ -146,11 +146,63 @@ public class ChatCopyUtil {
                 rt.getColorTexture(),
                 fb,
                 0,
-                ()-> Screenshot.takeScreenshot(
-                        rt,
-                        (image)->ChatCopyUtil.saveImage(image, client)
-                ),
-             0);
+                ()-> ChatCopyUtil.saveImage(rt, client),
+                0);
+    }
+
+    private static void saveImage(RenderTarget  rt, Minecraft client)
+    {
+        int i = rt.width;
+        int j = rt.height;
+
+        GpuTexture gpuTexture = rt.getColorTexture();
+        GpuBuffer gpuBuffer = RenderSystem.getDevice()
+                .createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, i * j * gpuTexture.getFormat().pixelSize());
+        CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
+        RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, () -> {
+            try (GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer)) {
+                NativeImage nativeImage = new NativeImage(i, j, false);
+
+                for (int k = 0; k < j; k++) {
+                    for (int l = 0; l < i; l++) {
+                        int m = readView.data().getInt((l + k * i) * gpuTexture.getFormat().pixelSize());
+                        nativeImage.setPixelABGR(l, j - k - 1, m);
+                    }
+                }
+                try  {
+                    boolean copySuccessful = false;
+                    if (Config.INSTANCE.saveImage || MacosUtil.IS_MACOS) {
+                        File screenShotDir = new File("screenshots/chat");
+                        screenShotDir.mkdirs();
+                        File screenshotFile = getScreenshotFilename(screenShotDir);
+                        nativeImage.writeToFile(screenshotFile);
+                        if (MacosUtil.IS_MACOS) {
+                            copySuccessful = MacOSCompat.doCopyMacOS(screenshotFile.getAbsolutePath());
+                            if (!Config.INSTANCE.saveImage) screenshotFile.delete();
+                        }
+                    }
+                    if (!MacosUtil.IS_MACOS) {
+                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                        WritableByteChannel writableChannel = Channels.newChannel(outputStream);
+                        nativeImage.writeToChannel(writableChannel);
+                        writableChannel.close();
+
+                        ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+                        BufferedImage image = ImageIO.read(inputStream);
+                        copySuccessful = ClipboardUtil.copy(image);
+                    }
+                    Component message = null;
+                    if (copySuccessful) {
+                        if (Config.INSTANCE.showCopyMessage) message = Component.translatable("chatshot.image.success");
+                    } else {
+                        message = Component.translatable("chatshot.image.fail");
+                    }
+                    if (message != null) client.gui.getChat().addMessage(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        },0);
     }
 
     private static File getScreenshotFilename(File directory) {
@@ -163,80 +215,5 @@ public class ChatCopyUtil {
         return file;
     }
 
-    private static GpuBuffer createBuffer(int width, int height, boolean read) {
-        GpuDevice device = RenderSystem.getDevice();
-        return device.createBuffer(null, BufferType.PIXEL_PACK, read ? BufferUsage.STATIC_READ : BufferUsage.STATIC_WRITE , width * height * 4);
-    }
 
-    private static void saveImage(NativeImage nativeImage, Minecraft client)
-    {
-        try  {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-            WritableByteChannel writableChannel = Channels.newChannel(outputStream);
-            nativeImage.writeToChannel(writableChannel);
-            writableChannel.close();
-
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-            BufferedImage image = ImageIO.read(inputStream);
-
-            BufferedImage transparentImage = imageToBufferedImage(makeColorTransparent(image, new Color(0x36, 0x39, 0x3F)));
-            boolean copySuccessfull = false;
-            if (Config.INSTANCE.saveImage || MacosUtil.IS_MACOS) {
-                File screenShotDir = new File("screenshots/chat");
-                screenShotDir.mkdirs();
-                File screenshotFile = getScreenshotFilename(screenShotDir);
-                ImageIO.write(transparentImage, "png", screenshotFile);
-                if (MacosUtil.IS_MACOS) {
-                    copySuccessfull = MacOSCompat.doCopyMacOS(screenshotFile.getAbsolutePath());
-                    if (!Config.INSTANCE.saveImage) screenshotFile.delete();
-                }
-            }
-            if (!MacosUtil.IS_MACOS) copySuccessfull = ClipboardUtil.copy(transparentImage);
-            Component message = null;
-            if (copySuccessfull) {
-                if (Config.INSTANCE.showCopyMessage) message = Component.translatable("chatshot.image.success");
-            } else {
-                message = Component.translatable("chatshot.image.fail");
-            }
-            if (message != null) client.gui.getChat().addMessage(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-        /*
-     * Taken from: https://stackoverflow.com/a/665483
-     */
-    public static Image makeColorTransparent(BufferedImage im, final Color color) {
-        ImageFilter filter = new RGBImageFilter() {
-
-            // the color we are looking for... Alpha bits are set to opaque
-            public final int markerRGB = color.getRGB() | 0xFF000000;
-
-            public final int filterRGB(int x, int y, int rgb) {
-                if ((rgb | 0xFF000000) == markerRGB) {
-                    // Mark the alpha bits as zero - transparent
-                    return 0x00FFFFFF & rgb;
-                } else {
-                    // nothing to do
-                    return rgb;
-                }
-            }
-        };
-
-        ImageProducer ip = new FilteredImageSource(im.getSource(), filter);
-        return Toolkit.getDefaultToolkit().createImage(ip);
-    }
-
-    /*
-     * Taken from: https://stackoverflow.com/a/665483
-     */
-    private static BufferedImage imageToBufferedImage(Image image) {
-        BufferedImage bufferedImage = new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = bufferedImage.createGraphics();
-        g2.drawImage(image, 0, 0, null);
-        g2.dispose();
-        return bufferedImage;
-    }
 }
