@@ -1,22 +1,30 @@
 package dev.dediamondpro.chatshot.util;
 
+import com.mojang.blaze3d.buffers.BufferType;
+import com.mojang.blaze3d.buffers.BufferUsage;
+import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.vertex.*;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.GpuDevice;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
-
 import net.minecraft.Util;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
@@ -33,24 +41,18 @@ import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
+import java.util.function.Function;
 
 public class ChatCopyUtil {
 
-    static public RenderType CUSTOM_TEXT_LAYER = RenderType.create(
-            "chatshot_text",
-            DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP,
-            VertexFormat.Mode.QUADS,
+    static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt)->(RenderType.create("chatshot_text",
             786432,
-            RenderType.CompositeState.builder()
-                    .setShaderState(RenderStateShard.RENDERTYPE_TEXT_SHADER)
-                    .setTransparencyState(RenderStateShard.TRANSLUCENT_TRANSPARENCY)
-                    .setLightmapState(RenderStateShard.LIGHTMAP)
-                    .setCullState(RenderStateShard.NO_CULL)
-                    .setLayeringState(RenderStateShard.VIEW_OFFSET_Z_LAYERING)
-                    .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> {
-                    }, () -> {
-                    }))
-                    .createCompositeState(false));
+            false,
+            false,
+            RenderPipelines.TEXT,
+            RenderType.CompositeState.builder().setTextureState(RenderStateShard.NO_TEXTURE)
+                    .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> (rt)))
+            .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false)));
 
     public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
         if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
@@ -74,12 +76,13 @@ public class ChatCopyUtil {
     }
 
     public static class OverrideVertexProvider extends MultiBufferSource.BufferSource {
-        private RenderType currentLayer = CUSTOM_TEXT_LAYER;
+        private RenderType currentLayer;
         public BufferBuilder bufferBuilder;
 
-        private OverrideVertexProvider(ByteBufferBuilder bufferAllocator) {
+        private OverrideVertexProvider(ByteBufferBuilder bufferAllocator, RenderTarget rt) {
             super(bufferAllocator, Object2ObjectSortedMaps.emptyMap());
-            this.bufferBuilder = new BufferBuilder(this.sharedBuffer, CUSTOM_TEXT_LAYER.mode(), CUSTOM_TEXT_LAYER.format());
+            currentLayer = CUSTOM_TEXT_LAYER.apply(rt);
+            this.bufferBuilder = new BufferBuilder(this.sharedBuffer, currentLayer.mode(), currentLayer.format());
         }
 
         @Override
@@ -106,24 +109,29 @@ public class ChatCopyUtil {
             width = Math.max(width, client.font.width(content));
         }
         int height = lines.size() * 9;
-        RenderTarget fb;
+        GpuDevice device = RenderSystem.getDevice();
+        CommandEncoder cmd = device.createCommandEncoder();
+
+        GpuBuffer fb;
+        RenderTarget rt ;
+
         try {
-            fb = createBuffer(width * scaleFactor, height * scaleFactor);
+            fb = createBuffer(width * scaleFactor, height * scaleFactor, true);
+            rt = new TextureTarget("test", width*scaleFactor, height*scaleFactor, true);
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
             client.gui.getChat().addMessage(Component.translatable("chatshot.noMessageFound"));
             return;
         }
-        OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256));
-        customConsumer.getBuffer(CUSTOM_TEXT_LAYER);
+        OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
         GuiGraphics context = new GuiGraphics(client, customConsumer);
-
+        cmd.clearColorAndDepthTextures(rt.getColorTexture(),new Color(0x36, 0x39, 0x3F).getRGB() , rt.getDepthTexture(), 1);
         context.pose().scale(
                 (float) client.getWindow().getGuiScaledWidth() / width,
                 (float) client.getWindow().getGuiScaledHeight() / height,
                 1f
         );
-        fb.bindWrite(false);
+
         int y = 0;
         for (GuiMessage.Line line : lines) {
             context.drawString(client.font, line.content(), 0, y, 0xFFFFFF, shadow);
@@ -134,9 +142,35 @@ public class ChatCopyUtil {
         CompatCore.INSTANCE.drawChatHud();
         context.flush();
         customConsumer.finish_drawing();
+        cmd.copyTextureToBuffer(
+                rt.getColorTexture(),
+                fb,
+                0,
+                ()-> Screenshot.takeScreenshot(
+                        rt,
+                        (image)->ChatCopyUtil.saveImage(image, client)
+                ),
+             0);
+    }
 
-        fb.unbindWrite();
-        try (NativeImage nativeImage = Screenshot.takeScreenshot(fb)) {
+    private static File getScreenshotFilename(File directory) {
+        String string = Util.getFilenameFormattedDateTime();
+        int i = 1;
+        File file;
+        while ((file = new File(directory, string + (i == 1 ? "" : "_" + i) + ".png")).exists()) {
+            ++i;
+        }
+        return file;
+    }
+
+    private static GpuBuffer createBuffer(int width, int height, boolean read) {
+        GpuDevice device = RenderSystem.getDevice();
+        return device.createBuffer(null, BufferType.PIXEL_PACK, read ? BufferUsage.STATIC_READ : BufferUsage.STATIC_WRITE , width * height * 4);
+    }
+
+    private static void saveImage(NativeImage nativeImage, Minecraft client)
+    {
+        try  {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
             WritableByteChannel writableChannel = Channels.newChannel(outputStream);
@@ -169,27 +203,9 @@ public class ChatCopyUtil {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        client.getMainRenderTarget().bindWrite(true);
     }
 
-    private static File getScreenshotFilename(File directory) {
-        String string = Util.getFilenameFormattedDateTime();
-        int i = 1;
-        File file;
-        while ((file = new File(directory, string + (i == 1 ? "" : "_" + i) + ".png")).exists()) {
-            ++i;
-        }
-        return file;
-    }
-
-    private static RenderTarget createBuffer(int width, int height) {
-        RenderTarget fb = new TextureTarget(/*?if >1.21.5 {*/ "ChatShot FBO", /*?}*/ width, height, true);
-        fb.setClearColor(0x36 / 255f, 0x39 / 255f, 0x3F / 255f, 0f);
-        fb.clear();
-        return fb;
-    }
-
-    /*
+        /*
      * Taken from: https://stackoverflow.com/a/665483
      */
     public static Image makeColorTransparent(BufferedImage im, final Color color) {
