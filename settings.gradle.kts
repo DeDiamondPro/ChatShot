@@ -10,7 +10,7 @@ pluginManagement {
 }
 
 plugins {
-    id("dev.kikugie.stonecutter") version "0.5.2"
+    id("dev.kikugie.stonecutter") version "0.7.10"
 }
 
 val platforms = listOf(
@@ -22,7 +22,7 @@ stonecutter {
     kotlinController = true
     create(rootProject) {
         for (version in platforms) {
-            vers(version, version.split('-')[0])
+            version(version, version.split('-')[0])
         }
         vcsVersion = "1.21.5-fabric"
     }

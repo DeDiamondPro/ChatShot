@@ -1,9 +1,6 @@
 [versions]
-# Config
-yacl = "3.1.1+1.20"
-
 # Build system
-arch_loom = "1.10-SNAPSHOT"
+arch_loom = "1.11-SNAPSHOT"
 shadow = "8.1.1"
 publishing = "0.8.3"
 
@@ -11,10 +8,6 @@ publishing = "0.8.3"
 objc = "1.2"
 
 [libraries]
-# Config
-yacl_fabric = { module = "dev.isxander.yacl:yet-another-config-lib-fabric", version.ref = "yacl" }
-yacl_forge = { module = "dev.isxander.yacl:yet-another-config-lib-forge", version.ref = "yacl" }
-
 # MacOs
 objc = { module = "ca.weblite:java-objc-bridge", version.ref = "objc" }
 

@@ -3,7 +3,12 @@ plugins {
 }
 stonecutter active "1.21.5-fabric" /* [SC] DO NOT EDIT */
 
-stonecutter registerChiseled tasks.register("chiseledBuild", stonecutter.chiseled) { 
-    group = "project"
-    ofTask("build")
+stonecutter tasks {
+    val ordering = versionComparator.thenComparingInt {
+        if (it.metadata.project.endsWith("fabric")) 2
+        else if (it.metadata.project.endsWith("neoforge")) 1
+        else 0
+    }
+    order("publishModrinth", ordering)
+    order("publishCurseforge", ordering)
 }
