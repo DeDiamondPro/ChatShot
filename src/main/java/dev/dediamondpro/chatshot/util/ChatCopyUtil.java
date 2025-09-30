@@ -112,17 +112,15 @@ public class ChatCopyUtil {
         GpuDevice device = RenderSystem.getDevice();
         CommandEncoder cmd = device.createCommandEncoder();
 
-        GpuBuffer fb;
         RenderTarget rt;
-
         try {
             rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
-            fb = device.createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, width * scaleFactor * height * scaleFactor * rt.getColorTexture().getFormat().pixelSize());
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
             client.gui.getChat().addMessage(Component.translatable("chatshot.noMessageFound"));
             return;
         }
+
         OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
         GuiGraphics context = new GuiGraphics(client, customConsumer);
         cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
@@ -144,13 +142,7 @@ public class ChatCopyUtil {
         context.flush();
         customConsumer.finish_drawing();
 
-        cmd.copyTextureToBuffer(
-                rt.getColorTexture(),
-                fb,
-                0,
-                () -> ChatCopyUtil.saveImage(rt, client),
-                0
-        );
+        ChatCopyUtil.saveImage(rt, client);
     }
 
     private static void saveImage(RenderTarget rt, Minecraft client) {
@@ -158,8 +150,10 @@ public class ChatCopyUtil {
         int j = rt.height;
 
         GpuTexture gpuTexture = rt.getColorTexture();
-        GpuBuffer gpuBuffer = RenderSystem.getDevice()
-                .createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, i * j * gpuTexture.getFormat().pixelSize());
+        GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
+                null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ,
+                i * j * gpuTexture.getFormat().pixelSize());
+
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
 
         RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, () -> {
@@ -204,6 +198,8 @@ public class ChatCopyUtil {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+            } finally {
+                gpuBuffer.close();
             }
         }, 0);
     }
