@@ -65,13 +65,13 @@ val modMenuVersion = VersionDefinition(
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
-    "1.21.5" to "21.5.66-beta",
+    "1.21.5" to "21.5.95",
 )
 val yaclVersion = VersionDefinition(
-    "1.21.4-fabric" to "3.6.6+1.21.4-fabric",
-    "1.21.4-neoforge" to "3.6.6+1.21.4-neoforge",
-    "1.21.5-fabric" to "3.6.6+1.21.5-fabric",
-    "1.21.5-neoforge" to "3.6.6+1.21.5-neoforge"
+    "1.21.4-fabric" to "3.8.0+1.21.4-fabric",
+    "1.21.4-neoforge" to "3.8.0+1.21.4-neoforge",
+    "1.21.5-fabric" to "3.8.0+1.21.5-fabric",
+    "1.21.5-neoforge" to "3.8.0+1.21.5-neoforge"
 )
 val noChatReportsVersion = VersionDefinition(
     "1.21.4-fabric" to "Fabric-1.21.4-v2.11.0",

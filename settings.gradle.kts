@@ -14,6 +14,7 @@ plugins {
 }
 
 val platforms = listOf(
+    "1.21.5-neoforge",
     "1.21.5-fabric",
 )
 
