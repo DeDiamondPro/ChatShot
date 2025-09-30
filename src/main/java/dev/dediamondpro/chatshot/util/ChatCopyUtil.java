@@ -29,6 +29,7 @@ import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import javax.imageio.ImageIO;
@@ -44,7 +45,7 @@ import java.util.function.Function;
 
 public class ChatCopyUtil {
 
-    static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt)->(RenderType.create("chatshot_text",
+    static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create("chatshot_text",
             786432,
             false,
             false,
@@ -75,7 +76,7 @@ public class ChatCopyUtil {
     }
 
     public static class OverrideVertexProvider extends MultiBufferSource.BufferSource {
-        private RenderType currentLayer;
+        private final RenderType currentLayer;
         public BufferBuilder bufferBuilder;
 
         private OverrideVertexProvider(ByteBufferBuilder bufferAllocator, RenderTarget rt) {
@@ -85,7 +86,7 @@ public class ChatCopyUtil {
         }
 
         @Override
-        public VertexConsumer getBuffer(RenderType renderType) {
+        public @NotNull VertexConsumer getBuffer(RenderType renderType) {
             return this.bufferBuilder;
         }
 
@@ -112,10 +113,10 @@ public class ChatCopyUtil {
         CommandEncoder cmd = device.createCommandEncoder();
 
         GpuBuffer fb;
-        RenderTarget rt ;
+        RenderTarget rt;
 
         try {
-            rt = new TextureTarget(null, width*scaleFactor, height*scaleFactor, false);
+            rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
             fb = device.createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, width * scaleFactor * height * scaleFactor * rt.getColorTexture().getFormat().pixelSize());
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
@@ -142,16 +143,17 @@ public class ChatCopyUtil {
         CompatCore.INSTANCE.drawChatHud();
         context.flush();
         customConsumer.finish_drawing();
+
         cmd.copyTextureToBuffer(
                 rt.getColorTexture(),
                 fb,
                 0,
-                ()-> ChatCopyUtil.saveImage(rt, client),
-                0);
+                () -> ChatCopyUtil.saveImage(rt, client),
+                0
+        );
     }
 
-    private static void saveImage(RenderTarget  rt, Minecraft client)
-    {
+    private static void saveImage(RenderTarget rt, Minecraft client) {
         int i = rt.width;
         int j = rt.height;
 
@@ -159,9 +161,10 @@ public class ChatCopyUtil {
         GpuBuffer gpuBuffer = RenderSystem.getDevice()
                 .createBuffer(null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, i * j * gpuTexture.getFormat().pixelSize());
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
+
         RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, () -> {
-            try (GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer)) {
-                NativeImage nativeImage = new NativeImage(i, j, false);
+            try (GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
+                 NativeImage nativeImage = new NativeImage(i, j, false)) {
 
                 for (int k = 0; k < j; k++) {
                     for (int l = 0; l < i; l++) {
@@ -169,7 +172,7 @@ public class ChatCopyUtil {
                         nativeImage.setPixelABGR(l, j - k - 1, m);
                     }
                 }
-                try  {
+                try {
                     boolean copySuccessful = false;
                     if (Config.INSTANCE.saveImage || MacosUtil.IS_MACOS) {
                         File screenShotDir = new File("screenshots/chat");
@@ -202,7 +205,7 @@ public class ChatCopyUtil {
                     e.printStackTrace();
                 }
             }
-        },0);
+        }, 0);
     }
 
     private static File getScreenshotFilename(File directory) {
@@ -214,6 +217,4 @@ public class ChatCopyUtil {
         }
         return file;
     }
-
-
 }
