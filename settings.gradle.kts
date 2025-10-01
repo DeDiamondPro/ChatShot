@@ -16,6 +16,7 @@ plugins {
 val platforms = listOf(
     "1.21.5-neoforge",
     "1.21.5-fabric",
+    "1.21.8-fabric",
 )
 
 stonecutter {
@@ -25,7 +26,7 @@ stonecutter {
         for (version in platforms) {
             version(version, version.split('-')[0])
         }
-        vcsVersion = "1.21.5-fabric"
+        vcsVersion = "1.21.8-fabric"
     }
 }
 

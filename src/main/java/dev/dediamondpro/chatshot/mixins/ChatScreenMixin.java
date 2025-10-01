@@ -10,6 +10,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Mixin(ChatScreen.class)
 public abstract class ChatScreenMixin extends Screen {
@@ -64,11 +66,20 @@ public abstract class ChatScreenMixin extends Screen {
         float buttonY = scaledButtonY * chatScale;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + buttonSize && mouseY >= buttonY && mouseY <= buttonY + buttonSize;
 
-        context.pose().pushPose();
-        context.pose().scale(chatScale, chatScale, 1f);
+        //? if <1.21.6 {
+        /*context.pose().pushPose();
+         *///?} else
+        context.pose().pushMatrix();
+        context.pose().scale(chatScale, chatScale /*? if <1.21.6 {*/ /*,1f *//*?}*/);
         context.fill(scaledButtonX, scaledButtonY, scaledButtonX + 9, scaledButtonY + 9, hovering ? 0xFFFFFF | color : color);
-        context.blit(RenderType::guiTextured, Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9);
-        context.pose().popPose();
+        context.blit(
+                /*? if <1.21.6 {*/ /*RenderType::guiTextured *//*?} else {*/ RenderPipelines.GUI_TEXTURED /*?}*/,
+                Textures.COPY, scaledButtonX, scaledButtonY, 0, 0, 9, 9, 9, 9
+        );
+        //? if <1.21.6 {
+        /*context.pose().popPose();
+         *///?} else
+        context.pose().popMatrix();
 
         if (hovering && Config.INSTANCE.tooltip) {
             // Draw the tooltip
@@ -76,10 +87,14 @@ public abstract class ChatScreenMixin extends Screen {
             tooltip.add(Component.translatable("chatshot.copy"));
             tooltip.add(Component.translatable("chatshot.click" + (Config.INSTANCE.clickAction == Config.CopyType.TEXT ? "Text" : "Image")));
             tooltip.add(Component.translatable("chatshot.shiftClick" + (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT ? "Text" : "Image")));
-            context.renderComponentTooltip(this.minecraft.font, tooltip, mouseX, mouseY);
+            //? if <1.21.6 {
+            /*context.renderComponentTooltip(this.minecraft.font, tooltip, mouseX, mouseY);
+             *///?} else
+            context.setTooltipForNextFrame(this.minecraft.font, tooltip, Optional.empty(), mouseX, mouseY);
         }
         if (hovering && this.mouseClicked) {
-            context.flush(); // Make sure the current context has drawn everything before we start messing with frameBuffers
+            //? if <1.21.6
+            /*context.flush();*/ // Make sure the current context has drawn everything before we start messing with frameBuffers
             List<GuiMessage.Line> visibleMessages = chatHudA.getVisibleMessages();
             ArrayList<GuiMessage.Line> messageParts = new ArrayList<>();
             // Collect all lines of the message
@@ -100,20 +115,26 @@ public abstract class ChatScreenMixin extends Screen {
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;
         int color = this.minecraft.options.getBackgroundColor(Integer.MIN_VALUE);
         context.fill(buttonX, buttonY, buttonX + 10, buttonY + 10, hovering ? 0xFFFFFF + color : color);
-        context.blit(RenderType::guiTextured, Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
+        context.blit(
+                /*? if <1.21.6 {*/ /*RenderType::guiTextured *//*?} else {*/ RenderPipelines.GUI_TEXTURED /*?}*/,
+                Textures.SCREENSHOT, buttonX, buttonY, 0, 0, 10, 10, 10, 10);
         if (hovering && Config.INSTANCE.tooltip) {
             ArrayList<Component> tooltip = new ArrayList<>();
             tooltip.add(Component.translatable("chatshot.copy"));
             tooltip.add(Component.translatable("chatshot.clickImage"));
-            context.renderComponentTooltip(this.minecraft.font, tooltip, mouseX, mouseY);
+            //? if <1.21.6 {
+            /*context.renderComponentTooltip(this.minecraft.font, tooltip, mouseX, mouseY);
+             *///?} else
+            context.setTooltipForNextFrame(this.minecraft.font, tooltip, Optional.empty(), mouseX, mouseY);
         }
         if (this.mouseClicked && hovering) {
-            context.flush(); // Make sure the current context has drawn everything before we start messing with frameBuffers
+            //? if <1.21.6
+            /*context.flush();*/ // Make sure the current context has drawn everything before we start messing with frameBuffers
             ArrayList<GuiMessage.Line> lines = new ArrayList<>();
             int scrolledLines = getChatHudA().getScrolledLines();
             List<GuiMessage.Line> visibleMessages = getChatHudA().getVisibleMessages();
             for (int i = scrolledLines; i < visibleMessages.size() && i < getChatHud().getLinesPerPage() + scrolledLines; i++) {
-                lines.add(0, visibleMessages.get(i));
+                lines.addFirst(visibleMessages.get(i));
             }
             ChatCopyUtil.copyImage(lines, this.minecraft);
         }

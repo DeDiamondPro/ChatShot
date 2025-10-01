@@ -27,7 +27,7 @@
   },
   "icon": "chatshot-128x.png",
   "license": "LGPL",
-  "accessWidener": "chatshot.accesswidener",
+  "accessWidener": "${aw}",
   "environment": "client",
   "depends": {
     "fabricloader": ">=0.14.0",

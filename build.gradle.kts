@@ -43,41 +43,45 @@ stonecutter {
 }
 
 val mcVersion = VersionDefinition(
-    "1.21.4" to VersionRange("1.21.3", "1.21.4", name = "1.21.4"),
     "1.21.5" to VersionRange("1.21.5", "1.21.5", name = "1.21.5"),
+    "1.21.8" to VersionRange("1.21.6", "1.21.8", name = "1.21.8"),
 )
 val parchmentVersion = VersionDefinition(
     "1.20.1" to "1.20.1:2023.09.03",
     "1.21.1" to "1.21.1:2024.11.17",
-    "1.21.4" to "1.21.4:2025.02.16"
+    "1.21.4" to "1.21.4:2025.03.23",
+    "1.21.5" to "1.21.5:2025.06.15",
+    "1.21.8" to "1.21.8:2025.09.14",
 )
 val fabricApiVersion = VersionDefinition(
     "1.20.1" to "0.92.3+1.20.1",
     "1.21.1" to "0.114.0+1.21.1",
     "1.21.4" to "0.118.0+1.21.4",
     "1.21.5" to "0.119.4+1.21.5",
+    "1.21.8" to "0.129.0+1.21.8",
 )
 val modMenuVersion = VersionDefinition(
     "1.20.1" to "7.2.2",
     "1.21.1" to "11.0.3",
     "1.21.4" to "13.0.2",
     "1.21.5" to "14.0.0-rc.2",
+    "1.21.8" to "15.0.0",
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
     "1.21.5" to "21.5.95",
 )
 val yaclVersion = VersionDefinition(
-    "1.21.4-fabric" to "3.8.0+1.21.4-fabric",
-    "1.21.4-neoforge" to "3.8.0+1.21.4-neoforge",
-    "1.21.5-fabric" to "3.8.0+1.21.5-fabric",
-    "1.21.5-neoforge" to "3.8.0+1.21.5-neoforge"
+    "1.21.8" to "3.8.0+1.21.6-${mcPlatform.loaderString}",
+    default = "3.8.0+${mcPlatform.name}",
 )
 val noChatReportsVersion = VersionDefinition(
     "1.21.4-fabric" to "Fabric-1.21.4-v2.11.0",
     "1.21.4-neoforge" to "NeoForge-1.21.4-v2.11.0",
     "1.21.5-fabric" to "Fabric-1.21.5-v2.12.0",
     "1.21.5-neoforge" to "NeoForge-1.21.5-v2.12.0",
+    "1.21.8-fabric" to "Fabric-1.21.7-v2.14.0",
+    "1.21.8-neoforge" to "NeoForge-1.21.7-v2.14.0",
 )
 
 dependencies {
@@ -92,7 +96,7 @@ dependencies {
     })
 
     if (mcPlatform.isFabric) {
-        modImplementation("net.fabricmc:fabric-loader:0.16.10")
+        modImplementation("net.fabricmc:fabric-loader:0.17.2")
 
         modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
         modImplementation("com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
@@ -109,8 +113,9 @@ dependencies {
     }
 }
 
+val accessWidener = if (mcPlatform.version > 1_21_06) "1.21.8-chatshot.accesswidener" else "chatshot.accesswidener"
 loom {
-    accessWidenerPath = rootProject.file("src/main/resources/chatshot.accesswidener")
+    accessWidenerPath = rootProject.file("src/main/resources/$accessWidener")
 
     if (mcPlatform.isForge) forge {
         convertAccessWideners.set(true)
@@ -172,7 +177,7 @@ tasks {
     remapJar {
         finalizedBy("copyJar")
         if (mcPlatform.isNeoForge) {
-            atAccessWideners.add("chatshot.accesswidener")
+            atAccessWideners.add(accessWidener)
         }
     }
     register<Copy>("copyJar") {
@@ -186,6 +191,7 @@ tasks {
             "id" to mod_id,
             "name" to mod_name,
             "version" to mod_version,
+            "aw" to accessWidener,
             "mcVersion" to mcVersion.get(mcPlatform).getLoaderRange(mcPlatform),
         )
 

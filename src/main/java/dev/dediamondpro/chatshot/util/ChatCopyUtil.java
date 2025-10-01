@@ -1,7 +1,5 @@
 package dev.dediamondpro.chatshot.util;
 
-import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -43,19 +41,28 @@ import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.function.Function;
 
-public class ChatCopyUtil {
+//? if <1.21.6 {
+/*import com.mojang.blaze3d.buffers.BufferType;
+import com.mojang.blaze3d.buffers.BufferUsage;
+*///?} else {
+import net.minecraft.client.gui.render.state.GuiRenderState;
+//?}
 
-    static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create("chatshot_text",
+public class ChatCopyUtil {
+    static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create(
+            "chatshot_text",
             786432,
             false,
             false,
             RenderPipelines.TEXT,
             RenderType.CompositeState.builder().setTextureState(RenderStateShard.NO_TEXTURE)
                     .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> (rt)))
-                    .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false)));
+                    .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false))
+    );
 
     public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
-        if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
+        if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
             else copyImage(lines, client);
         } else {
@@ -90,7 +97,7 @@ public class ChatCopyUtil {
             return this.bufferBuilder;
         }
 
-        public void finish_drawing() {
+        public void finishDrawing() {
             this.startedBuilders.put(this.currentLayer, this.bufferBuilder);
             this.endBatch(this.currentLayer);
         }
@@ -122,26 +129,37 @@ public class ChatCopyUtil {
         }
 
         OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
-        GuiGraphics context = new GuiGraphics(client, customConsumer);
+        //? if <1.21.6 {
+        /*GuiGraphics context = new GuiGraphics(client, customConsumer);
+        *///?} else {
+        GuiRenderState renderState = new GuiRenderState();
+        GuiGraphics context = new GuiGraphics(client, renderState);
+        //?}
         cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
 
         context.pose().scale(
                 (float) client.getWindow().getGuiScaledWidth() / width,
-                (float) client.getWindow().getGuiScaledHeight() / height,
-                1f
+                (float) client.getWindow().getGuiScaledHeight() / height
+                /*? if <1.21.6 {*/ /*,1f *//*?}*/
         );
 
         int y = 0;
         for (GuiMessage.Line line : lines) {
-            context.drawString(client.font, line.content(), 0, y, 0xFFFFFF, shadow);
+            context.drawString(client.font, line.content(), 0, y, 0xFFFFFFFF, shadow);
             y += 9;
         }
 
         // Force mods doing things like hud-batching to draw immediately
         CompatCore.INSTANCE.drawChatHud();
-        context.flush();
-        customConsumer.finish_drawing();
 
+        //? if <1.21.6 {
+        /*context.flush();
+        *///?} else {
+        // TODO: draw to render target somehow
+        //?}
+
+
+        customConsumer.finishDrawing();
         ChatCopyUtil.saveImage(rt, client);
     }
 
@@ -150,14 +168,26 @@ public class ChatCopyUtil {
         int j = rt.height;
 
         GpuTexture gpuTexture = rt.getColorTexture();
-        GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
-                null, BufferType.PIXEL_PACK, BufferUsage.STATIC_READ,
-                i * j * gpuTexture.getFormat().pixelSize());
+        int size = i * j * gpuTexture.getFormat().pixelSize();
+
+        //? if <1.21.6 {
+        /*GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
+                () -> "ChatShot UBO", BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, size
+          );
+        *///?} else {
+        GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(() -> "ChatShot UBO", 9, size);
+        //?}
 
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
 
         RenderSystem.getDevice().createCommandEncoder().copyTextureToBuffer(gpuTexture, gpuBuffer, 0, () -> {
-            try (GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
+            try (
+                    //? if <1.21.6 {
+                    /*GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
+                    *///?} else {
+                    GpuBuffer.MappedView readView = commandEncoder.mapBuffer(gpuBuffer, true, false);
+                    //?}
+
                  NativeImage nativeImage = new NativeImage(i, j, false)) {
 
                 for (int k = 0; k < j; k++) {
