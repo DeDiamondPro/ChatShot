@@ -1,8 +1,8 @@
 package dev.dediamondpro.chatshot.mixins;
 
-import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
+import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import dev.dediamondpro.chatshot.util.ChatCopyUtil;
 import dev.dediamondpro.chatshot.util.Textures;
 import net.minecraft.client.GuiMessage;
@@ -89,7 +89,7 @@ public abstract class ChatScreenMixin extends Screen {
                 messageParts.addFirst(visibleMessages.get(i));
             }
             if (messageParts.isEmpty()) return;
-            ChatCopyUtil.copy(messageParts, this.minecraft);
+            ChatCopyUtil.copy(messageParts, chatHudL.chatshot$getMessageForLine(chatLineY), this.minecraft);
         }
     }
 
