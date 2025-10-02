@@ -62,7 +62,7 @@ val fabricApiVersion = VersionDefinition(
     "1.21.4" to "0.118.0+1.21.4",
     "1.21.5" to "0.119.4+1.21.5",
     "1.21.6" to "0.128.2+1.21.6",
-    "1.21.8" to "0.129.0+1.21.8",
+    "1.21.8" to "0.133.4+1.21.8",
 )
 val modMenuVersion = VersionDefinition(
     "1.20.1" to "7.2.2",
