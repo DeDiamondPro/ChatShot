@@ -1,5 +1,14 @@
 package dev.dediamondpro.chatshot.util;
 
+//? if <1.21.6 {
+/*import com.mojang.blaze3d.buffers.BufferType;
+import com.mojang.blaze3d.buffers.BufferUsage;
+*///?} else {
+import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.gui.render.GuiRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
+//?}
+
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -21,10 +30,8 @@ import net.minecraft.Util;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.RenderStateShard;
-import net.minecraft.client.renderer.RenderType;
+
+import net.minecraft.client.renderer.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +52,7 @@ import java.util.function.Function;
 /*import com.mojang.blaze3d.buffers.BufferType;
 import com.mojang.blaze3d.buffers.BufferUsage;
 *///?} else {
-import net.minecraft.client.gui.render.state.GuiRenderState;
+
 //?}
 
 public class ChatCopyUtil {
@@ -131,9 +138,14 @@ public class ChatCopyUtil {
         OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
         //? if <1.21.6 {
         /*GuiGraphics context = new GuiGraphics(client, customConsumer);
+        
         *///?} else {
         GuiRenderState renderState = new GuiRenderState();
         GuiGraphics context = new GuiGraphics(client, renderState);
+        GuiRenderer guiRenderer = new GuiRenderer(
+                renderState,
+                customConsumer,
+                List.of());
         //?}
         cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
 
@@ -154,10 +166,9 @@ public class ChatCopyUtil {
 
         //? if <1.21.6 {
         /*context.flush();
-        *///?} else {
-        // TODO: draw to render target somehow
+         *///?} else {
+        ((GuiRendererInterface) (Object) guiRenderer).chatShot$render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE), rt);
         //?}
-
 
         customConsumer.finishDrawing();
         ChatCopyUtil.saveImage(rt, client);
@@ -170,13 +181,11 @@ public class ChatCopyUtil {
         GpuTexture gpuTexture = rt.getColorTexture();
         int size = i * j * gpuTexture.getFormat().pixelSize();
 
-        //? if <1.21.6 {
-        /*GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
-                () -> "ChatShot UBO", BufferType.PIXEL_PACK, BufferUsage.STATIC_READ, size
-          );
-        *///?} else {
-        GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(() -> "ChatShot UBO", 9, size);
-        //?}
+        GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
+                null,
+                /*? >=1.21.6 {*/ GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ /*?} else {*/ /*BufferType.PIXEL_PACK, BufferUsage.STATIC_READ *//*?}*/,
+                rt.width * rt.height * rt.getColorTexture().getFormat().pixelSize()
+        );
 
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
 

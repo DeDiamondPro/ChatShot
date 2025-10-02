@@ -16,8 +16,11 @@ plugins {
 val platforms = listOf(
     "1.21.5-neoforge",
     "1.21.5-fabric",
+    "1.21.6-fabric",
+    "1.21.6-neoforge",
     "1.21.8-fabric",
-)
+    "1.21.8-neoforge",
+    )
 
 stonecutter {
     centralScript = "build.gradle.kts"
@@ -26,7 +29,7 @@ stonecutter {
         for (version in platforms) {
             version(version, version.split('-')[0])
         }
-        vcsVersion = "1.21.8-fabric"
+        vcsVersion = "1.21.6-neoforge"
     }
 }
 
