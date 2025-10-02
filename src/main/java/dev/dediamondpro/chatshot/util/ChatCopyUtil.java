@@ -138,8 +138,7 @@ public class ChatCopyUtil {
         OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
         //? if <1.21.6 {
         /*GuiGraphics context = new GuiGraphics(client, customConsumer);
-        
-        *///?} else {
+         *///?} else {
         GuiRenderState renderState = new GuiRenderState();
         GuiGraphics context = new GuiGraphics(client, renderState);
         GuiRenderer guiRenderer = new GuiRenderer(
@@ -172,6 +171,9 @@ public class ChatCopyUtil {
 
         customConsumer.finishDrawing();
         ChatCopyUtil.saveImage(rt, client);
+        //? if >=1.21.6 {
+        guiRenderer.close();
+        //?}
     }
 
     private static void saveImage(RenderTarget rt, Minecraft client) {
@@ -239,6 +241,7 @@ public class ChatCopyUtil {
                 }
             } finally {
                 gpuBuffer.close();
+                rt.destroyBuffers();
             }
         }, 0);
     }
