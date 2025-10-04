@@ -18,6 +18,8 @@ val platforms = listOf(
     "1.21.5-fabric",
     "1.21.6-neoforge",
     "1.21.8-fabric",
+    "1.21.9-fabric",
+    "1.21.9-neoforge",
 )
 
 stonecutter {

@@ -68,8 +68,14 @@ public class ChatCopyUtil {
     );
 
     public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
+        //? if <1.21.9 {
+        /*
         if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
+            *///?} else {
+        if (GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+                || GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
+        //?}
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
             else copyImage(lines, client);
         } else {
@@ -141,11 +147,18 @@ public class ChatCopyUtil {
          *///?} else {
         GuiRenderState renderState = new GuiRenderState();
         GuiGraphics context = new GuiGraphics(client, renderState);
+        //? if <1.21.9 {
+        /*
         GuiRenderer guiRenderer = new GuiRenderer(
                 renderState,
                 customConsumer,
                 List.of());
+        *///?} else {
+        GuiRenderer guiRenderer =  new GuiRenderer(renderState, customConsumer,  new SubmitNodeStorage(), client.gameRenderer.getFeatureRenderDispatcher(), List.of());
         //?}
+        //?}
+
+
         cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
 
         context.pose().scale(
@@ -166,7 +179,7 @@ public class ChatCopyUtil {
         //? if <1.21.6 {
         /*context.flush();
          *///?} else {
-        ((GuiRendererInterface) (Object) guiRenderer).chatShot$render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE), rt);
+        ((GuiRendererInterface) guiRenderer).chatShot$render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE), rt);
         //?}
 
         customConsumer.finishDrawing();
@@ -181,8 +194,6 @@ public class ChatCopyUtil {
         int j = rt.height;
 
         GpuTexture gpuTexture = rt.getColorTexture();
-        int size = i * j * gpuTexture.getFormat().pixelSize();
-
         GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
                 null,
                 /*? >=1.21.6 {*/ GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ /*?} else {*/ /*BufferType.PIXEL_PACK, BufferUsage.STATIC_READ *//*?}*/,
