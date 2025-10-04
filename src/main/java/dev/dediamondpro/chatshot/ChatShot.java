@@ -1,7 +1,7 @@
 package dev.dediamondpro.chatshot;
 
 //? if neoforge {
-/*import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
@@ -16,4 +16,4 @@ public class ChatShot {
         );
     }
 }
-*///?}
+//?}

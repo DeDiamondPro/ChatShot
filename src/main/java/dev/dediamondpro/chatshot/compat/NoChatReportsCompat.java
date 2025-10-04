@@ -1,5 +1,7 @@
 package dev.dediamondpro.chatshot.compat;
 
+//? if ncr {
+/*
 import com.aizistral.nochatreports.common.config.NCRConfig;
 
 public class NoChatReportsCompat implements ICompatHandler {
@@ -7,7 +9,9 @@ public class NoChatReportsCompat implements ICompatHandler {
     public int getButtonOffset() {
         return (NCRConfig.getClient().showServerSafety() && NCRConfig.getClient().enableMod() ? 25 : 0)
                 //? if <1.21.5
-                /*+ (NCRConfig.getEncryption().showEncryptionButton() ? 25 : 0)*/
+                /^+ (NCRConfig.getEncryption().showEncryptionButton() ? 25 : 0)^/
                 ;
     }
 }
+*/
+//?}

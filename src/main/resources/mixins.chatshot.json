@@ -6,6 +6,7 @@
     "ChatHudAccessor",
     "ChatHudMixin",
     "ChatScreenMixin",
+    "GuiRendererMixin",
     "MainMixin"
   ]
 }
