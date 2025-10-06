@@ -54,22 +54,28 @@ public class ChatCopyUtil {
                     .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> (rt)))
                     .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false)));
 
-    public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
+    public static void copy(List<GuiMessage.Line> lines, Component fullMessage, Minecraft client) {
         if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
-            if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
+            if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, fullMessage, client);
             else copyImage(lines, client);
         } else {
-            if (Config.INSTANCE.clickAction == Config.CopyType.TEXT) copyString(lines, client);
+            if (Config.INSTANCE.clickAction == Config.CopyType.TEXT) copyString(lines, fullMessage, client);
             else copyImage(lines, client);
         }
     }
 
-    public static void copyString(List<GuiMessage.Line> lines, Minecraft client) {
-        CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
-        for (GuiMessage.Line line : lines) {
-            line.content().accept(visitor);
+    public static void copyString(List<GuiMessage.Line> lines, Component fullMessage, Minecraft client) {
+        String clipboardString;
+        if (fullMessage == null) {
+            CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
+            for (GuiMessage.Line line : lines) {
+                line.content().accept(visitor);
+            }
+            clipboardString = visitor.collect();
+        } else {
+            clipboardString = fullMessage.getString();
         }
-        client.keyboardHandler.setClipboard(visitor.collect());
+        client.keyboardHandler.setClipboard(clipboardString);
         if (Config.INSTANCE.showCopyMessage) {
             client.gui.getChat().addMessage(Component.translatable("chatshot.text.success"));
         }

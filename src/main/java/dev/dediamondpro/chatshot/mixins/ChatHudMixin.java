@@ -4,17 +4,30 @@ import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import net.minecraft.client.GuiMessage;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.ChatComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.profiling.ProfilerFiller;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
+import java.util.List;
+
 @Mixin(ChatComponent.class)
 public abstract class ChatHudMixin implements ChatHudLocals {
 
+    @Shadow
+    @Final
+    private List<GuiMessage.Line> trimmedMessages;
+    @Shadow
+    @Final
+    private List<GuiMessage> allMessages;
+    @Shadow
+    private int chatScrollbarPos;
     @Unique
     private int chatY = -1;
 
@@ -40,5 +53,24 @@ public abstract class ChatHudMixin implements ChatHudLocals {
     @Override
     public int chatShot$getChatBackgroundColor() {
         return chatBackgroundColor;
+    }
+
+    @Override
+    public Component chatshot$getMessageForLine(int index) {
+        index += this.chatScrollbarPos;
+
+        int fullIndex = -1;
+        for (var i = 0; i < this.trimmedMessages.size(); i++) {
+            if (this.trimmedMessages.get(i).endOfEntry()) {
+                fullIndex++;
+            }
+            if (i != index) continue;
+
+            if (fullIndex >= 0 && fullIndex < this.allMessages.size()) {
+                return this.allMessages.get(fullIndex).content();
+            }
+            break;
+        }
+        return null;
     }
 }
