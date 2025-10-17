@@ -15,8 +15,8 @@ import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState;
 import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
 import net.minecraft.client.renderer.MappableRingBuffer;
 //? if neoforge {
-import net.neoforged.neoforge.client.gui.PictureInPictureRendererPool;
-//?}
+/*import net.neoforged.neoforge.client.gui.PictureInPictureRendererPool;
+*///?}
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -31,8 +31,8 @@ import java.util.function.Supplier;
 @Mixin(GuiRenderer.class)
 public class GuiRendererMixin implements GuiRendererInterface {
     //? if neoforge {
-    @Shadow private Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRendererPool<?>> pictureInPictureRendererPools;
-    //?}
+    /*@Shadow private Map<Class<? extends PictureInPictureRenderState>, PictureInPictureRendererPool<?>> pictureInPictureRendererPools;
+    *///?}
     @Shadow private List<GuiRenderer.Draw> draws;
     @Shadow private int firstDrawIndexAfterBlur;
     @Shadow private CachedOrthoProjectionMatrixBuffer guiProjectionMatrixBuffer;
@@ -87,8 +87,8 @@ public class GuiRendererMixin implements GuiRendererInterface {
         this.firstDrawIndexAfterBlur = Integer.MAX_VALUE;
         this.clearUnusedOversizedItemRenderers();
         //? if neoforge {
-        this.pictureInPictureRendererPools.values().forEach(PictureInPictureRendererPool::clearUnusedRenderers);
-        //?}
+        /*this.pictureInPictureRendererPools.values().forEach(PictureInPictureRendererPool::clearUnusedRenderers);
+        *///?}
     }
 }
 //?}

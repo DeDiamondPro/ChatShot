@@ -33,17 +33,14 @@ repositories {
 
 val mcVersion = VersionDefinition(
     "1.21.5" to VersionRange("1.21.5", "1.21.5", name = "1.21.5"),
-    "1.21.6" to VersionRange("1.21.6", "1.21.8", name = "1.21.6"),
-    "1.21.7" to VersionRange("1.21.6", "1.21.8", name = "1.21.7"),
     "1.21.8" to VersionRange("1.21.6", "1.21.8", name = "1.21.8"),
-    "1.21.9" to VersionRange("1.21.9", "1.21.9", name = "1.21.9"),
+    "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
 )
 val parchmentVersion = VersionDefinition(
     "1.20.1" to "1.20.1:2023.09.03",
     "1.21.1" to "1.21.1:2024.11.17",
     "1.21.4" to "1.21.4:2025.03.23",
     "1.21.5" to "1.21.5:2025.06.15",
-    "1.21.6" to "1.21.5:2025.06.15",
     "1.21.8" to "1.21.8:2025.09.14",
 )
 val fabricApiVersion = VersionDefinition(
@@ -51,28 +48,26 @@ val fabricApiVersion = VersionDefinition(
     "1.21.1" to "0.114.0+1.21.1",
     "1.21.4" to "0.118.0+1.21.4",
     "1.21.5" to "0.119.4+1.21.5",
-    "1.21.6" to "0.128.2+1.21.6",
     "1.21.8" to "0.133.4+1.21.8",
-    "1.21.9" to "0.134.0+1.21.9",
+    "1.21.10" to "0.135.0+1.21.10",
 )
 val modMenuVersion = VersionDefinition(
     "1.20.1" to "7.2.2",
     "1.21.1" to "11.0.3",
     "1.21.4" to "13.0.2",
     "1.21.5" to "14.0.0-rc.2",
-    "1.21.6" to "15.0.0",
     "1.21.8" to "15.0.0",
-    "1.21.9" to "15.0.0",
+    "1.21.10" to "16.0.0-rc.1",
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
     "1.21.5" to "21.5.95",
-    "1.21.6" to "21.6.20-beta",
     "1.21.8" to "21.8.47",
-    "1.21.9" to "21.9.11-beta",
+    "1.21.10" to "21.10.18-beta",
 )
 val yaclVersion = VersionDefinition(
     "1.21.8" to "3.8.0+1.21.6-${mcPlatform.loaderString}",
+    "1.21.10" to "3.8.0+1.21.9-${mcPlatform.loaderString}",
     default = "3.8.0+${mcPlatform.name}",
 )
 val noChatReportsVersion = VersionDefinition(
@@ -80,10 +75,10 @@ val noChatReportsVersion = VersionDefinition(
     "1.21.4-neoforge" to "NeoForge-1.21.4-v2.11.0",
     "1.21.5-fabric" to "Fabric-1.21.5-v2.12.0",
     "1.21.5-neoforge" to "NeoForge-1.21.5-v2.12.0",
-    "1.21.6-fabric" to "Fabric-1.21.6-v2.13.0",
-    "1.21.6-neoforge" to "NeoForge-1.21.6-v2.13.0",
-    "1.21.8-fabric" to "Fabric-1.21.7-v2.14.0",
-    "1.21.8-neoforge" to "NeoForge-1.21.7-v2.14.0",
+    "1.21.8-fabric" to "Fabric-1.21.8-v2.15.0",
+    "1.21.8-neoforge" to "NeoForge-1.21.8-v2.15.0",
+    "1.21.10-fabric" to "Fabric-1.21.10-v2.16.0",
+    "1.21.10-neoforge" to "NeoForge-1.21.10-v2.16.0"
 )
 
 stonecutter {
@@ -91,7 +86,7 @@ stonecutter {
     constants["forge"] = mcPlatform.isForge
     constants["neoforge"] = mcPlatform.isNeoForge
     constants["forgelike"] = mcPlatform.isForgeLike
-    constants["ncr"] = noChatReportsVersion.getOrNull(mcPlatform)!=null
+    constants["ncr"] = noChatReportsVersion.getOrNull(mcPlatform) != null
 
     swaps["mod_name"] = "\"$mod_name\""
     swaps["mod_id"] = "\"$mod_id\""
@@ -118,8 +113,8 @@ dependencies {
         "neoForge"("net.neoforged:neoforge:${neoForgeVersion.get(mcPlatform)}")
     }
 
-    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}"){
-        exclude( "net.neoforged.fancymodloader", "loader")
+    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
+        exclude("net.neoforged.fancymodloader", "loader")
     }
     compileOnly(libs.objc)
 
