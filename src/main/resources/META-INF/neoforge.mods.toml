@@ -22,7 +22,8 @@ side="BOTH"
 modId="yet_another_config_lib_v3"
 versionRange="[3.0.0,)"
 mandatory=false
+type="optional"
 side="CLIENT"
 
 [[mixins]]
-config = "mixins.chatshot.json"
+config = "${mixins}"

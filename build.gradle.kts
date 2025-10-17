@@ -34,6 +34,8 @@ repositories {
 val mcVersion = VersionDefinition(
     "1.21.5" to VersionRange("1.21.5", "1.21.5", name = "1.21.5"),
     "1.21.8" to VersionRange("1.21.6", "1.21.8", name = "1.21.8"),
+    // We need newer fabric api version
+    "1.21.8-fabric" to VersionRange("1.21.8", "1.21.8", name = "1.21.8"),
     "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
 )
 val parchmentVersion = VersionDefinition(
@@ -50,6 +52,10 @@ val fabricApiVersion = VersionDefinition(
     "1.21.5" to "0.119.4+1.21.5",
     "1.21.8" to "0.133.4+1.21.8",
     "1.21.10" to "0.135.0+1.21.10",
+)
+val minFabricApiVersion = VersionDefinition(
+    "1.21.8" to ">=0.131.0",
+    default = "*"
 )
 val modMenuVersion = VersionDefinition(
     "1.20.1" to "7.2.2",
@@ -125,12 +131,13 @@ dependencies {
 }
 
 val accessWidener = if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener" else "chatshot.accesswidener"
+val mixins = if (mcPlatform.version >= 1_21_06) "1.21.8.mixins.chatshot.json" else "1.21.5.mixins.chatshot.json"
 loom {
     accessWidenerPath = rootProject.file("src/main/resources/$accessWidener")
 
     if (mcPlatform.isForge) forge {
         convertAccessWideners.set(true)
-        mixinConfig("mixins.resourcify.json")
+        mixinConfig(mixins)
     }
 
     runConfigs["client"].isIdeConfigGenerated = true
@@ -203,7 +210,9 @@ tasks {
             "name" to mod_name,
             "version" to mod_version,
             "aw" to accessWidener,
+            "mixins" to mixins,
             "mcVersion" to mcVersion.get(mcPlatform).getLoaderRange(mcPlatform),
+            "fabricApiVersion" to minFabricApiVersion.get(mcPlatform),
         )
 
         properties.forEach { (k, v) -> inputs.property(k, v) }
