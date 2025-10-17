@@ -124,7 +124,7 @@ dependencies {
     }
 }
 
-val accessWidener = if (mcPlatform.version >= 1_21_06) "1.21.6-chatshot.accesswidener" else "chatshot.accesswidener"
+val accessWidener = if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener" else "chatshot.accesswidener"
 loom {
     accessWidenerPath = rootProject.file("src/main/resources/$accessWidener")
 

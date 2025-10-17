@@ -1,14 +1,5 @@
 package dev.dediamondpro.chatshot.util;
 
-//? if <1.21.6 {
-/*import com.mojang.blaze3d.buffers.BufferType;
-import com.mojang.blaze3d.buffers.BufferUsage;
-*///?} else {
-import net.minecraft.client.gui.render.state.GuiRenderState;
-import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.renderer.fog.FogRenderer;
-//?}
-
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
@@ -52,7 +43,9 @@ import java.util.function.Function;
 /*import com.mojang.blaze3d.buffers.BufferType;
 import com.mojang.blaze3d.buffers.BufferUsage;
 *///?} else {
-
+import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.gui.render.GuiRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
 //?}
 
 public class ChatCopyUtil {
@@ -69,13 +62,12 @@ public class ChatCopyUtil {
 
     public static void copy(List<GuiMessage.Line> lines, Minecraft client) {
         //? if <1.21.9 {
-        /*
-        if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+        /*if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
             *///?} else {
         if (GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
-        //?}
+            //?}
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, client);
             else copyImage(lines, client);
         } else {
@@ -148,13 +140,9 @@ public class ChatCopyUtil {
         GuiRenderState renderState = new GuiRenderState();
         GuiGraphics context = new GuiGraphics(client, renderState);
         //? if <1.21.9 {
-        /*
-        GuiRenderer guiRenderer = new GuiRenderer(
-                renderState,
-                customConsumer,
-                List.of());
+        /*GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, List.of());
         *///?} else {
-        GuiRenderer guiRenderer =  new GuiRenderer(renderState, customConsumer,  new SubmitNodeStorage(), client.gameRenderer.getFeatureRenderDispatcher(), List.of());
+        GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, new SubmitNodeStorage(), client.gameRenderer.getFeatureRenderDispatcher(), List.of());
         //?}
         //?}
 
@@ -206,11 +194,12 @@ public class ChatCopyUtil {
             try (
                     //? if <1.21.6 {
                     /*GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
-                    *///?} else {
+                     *///?} else {
                     GpuBuffer.MappedView readView = commandEncoder.mapBuffer(gpuBuffer, true, false);
                     //?}
 
-                 NativeImage nativeImage = new NativeImage(i, j, false)) {
+                    NativeImage nativeImage = new NativeImage(i, j, false)
+            ) {
 
                 for (int k = 0; k < j; k++) {
                     for (int l = 0; l < i; l++) {

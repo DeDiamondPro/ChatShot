@@ -1,6 +1,5 @@
 accessWidener v1 named
 accessible method com/mojang/blaze3d/platform/NativeImage writeToChannel (Ljava/nio/channels/WritableByteChannel;)Z
-accessible field net/minecraft/client/renderer/GameRenderer fogRenderer Lnet/minecraft/client/renderer/fog/FogRenderer;
 accessible class net/minecraft/client/gui/render/GuiRenderer$Draw
 accessible field net/minecraft/client/gui/render/GuiRenderer$Draw indexCount I
 accessible class net/minecraft/client/gui/render/GuiRenderer$MeshToDraw
