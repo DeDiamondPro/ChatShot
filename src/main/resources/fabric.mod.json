@@ -16,7 +16,7 @@
     "modmenu": ["dev.dediamondpro.chatshot.config.ModMenuIntegration"]
   },
   "mixins": [
-    "mixins.${id}.json"
+    "${mixins}"
   ],
   "custom": {
     "modmenu": {
@@ -27,12 +27,12 @@
   },
   "icon": "chatshot-128x.png",
   "license": "LGPL",
-  "accessWidener": "chatshot.accesswidener",
+  "accessWidener": "${aw}",
   "environment": "client",
   "depends": {
-    "fabricloader": ">=0.14.0",
+    "fabricloader": ">=0.16.0",
     "minecraft": "${mcVersion}",
-    "fabric-resource-loader-v0": "*"
+    "fabric-api": "${fabricApiVersion}"
   },
   "recommends": {
     "yet_another_config_lib_v3": "*",

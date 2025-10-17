@@ -1,0 +1,12 @@
+{
+  "package": "dev.dediamondpro.chatshot.mixins",
+  "minVersion": "0.7",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "ChatHudAccessor",
+    "ChatHudMixin",
+    "ChatScreenMixin",
+    "GuiRendererMixin",
+    "MainMixin"
+  ]
+}
