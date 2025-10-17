@@ -31,20 +31,12 @@ repositories {
     maven("https://thedarkcolour.github.io/KotlinForForge/")
 }
 
-stonecutter {
-    constants["fabric"] = mcPlatform.isFabric
-    constants["forge"] = mcPlatform.isForge
-    constants["neoforge"] = mcPlatform.isNeoForge
-    constants["forgelike"] = mcPlatform.isForgeLike
-
-    swaps["mod_name"] = "\"$mod_name\""
-    swaps["mod_id"] = "\"$mod_id\""
-    swaps["mod_version"] = "\"$mod_version\""
-}
-
 val mcVersion = VersionDefinition(
     "1.21.5" to VersionRange("1.21.5", "1.21.5", name = "1.21.5"),
     "1.21.8" to VersionRange("1.21.6", "1.21.8", name = "1.21.8"),
+    // We need newer fabric api version
+    "1.21.8-fabric" to VersionRange("1.21.8", "1.21.8", name = "1.21.8"),
+    "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
 )
 val parchmentVersion = VersionDefinition(
     "1.20.1" to "1.20.1:2023.09.03",
@@ -58,7 +50,12 @@ val fabricApiVersion = VersionDefinition(
     "1.21.1" to "0.114.0+1.21.1",
     "1.21.4" to "0.118.0+1.21.4",
     "1.21.5" to "0.119.4+1.21.5",
-    "1.21.8" to "0.129.0+1.21.8",
+    "1.21.8" to "0.133.4+1.21.8",
+    "1.21.10" to "0.135.0+1.21.10",
+)
+val minFabricApiVersion = VersionDefinition(
+    "1.21.8" to ">=0.131.0",
+    default = "*"
 )
 val modMenuVersion = VersionDefinition(
     "1.20.1" to "7.2.2",
@@ -66,13 +63,17 @@ val modMenuVersion = VersionDefinition(
     "1.21.4" to "13.0.2",
     "1.21.5" to "14.0.0-rc.2",
     "1.21.8" to "15.0.0",
+    "1.21.10" to "16.0.0-rc.1",
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
     "1.21.5" to "21.5.95",
+    "1.21.8" to "21.8.47",
+    "1.21.10" to "21.10.18-beta",
 )
 val yaclVersion = VersionDefinition(
     "1.21.8" to "3.8.0+1.21.6-${mcPlatform.loaderString}",
+    "1.21.10" to "3.8.0+1.21.9-${mcPlatform.loaderString}",
     default = "3.8.0+${mcPlatform.name}",
 )
 val noChatReportsVersion = VersionDefinition(
@@ -80,9 +81,23 @@ val noChatReportsVersion = VersionDefinition(
     "1.21.4-neoforge" to "NeoForge-1.21.4-v2.11.0",
     "1.21.5-fabric" to "Fabric-1.21.5-v2.12.0",
     "1.21.5-neoforge" to "NeoForge-1.21.5-v2.12.0",
-    "1.21.8-fabric" to "Fabric-1.21.7-v2.14.0",
-    "1.21.8-neoforge" to "NeoForge-1.21.7-v2.14.0",
+    "1.21.8-fabric" to "Fabric-1.21.8-v2.15.0",
+    "1.21.8-neoforge" to "NeoForge-1.21.8-v2.15.0",
+    "1.21.10-fabric" to "Fabric-1.21.10-v2.16.0",
+    "1.21.10-neoforge" to "NeoForge-1.21.10-v2.16.0"
 )
+
+stonecutter {
+    constants["fabric"] = mcPlatform.isFabric
+    constants["forge"] = mcPlatform.isForge
+    constants["neoforge"] = mcPlatform.isNeoForge
+    constants["forgelike"] = mcPlatform.isForgeLike
+    constants["ncr"] = noChatReportsVersion.getOrNull(mcPlatform) != null
+
+    swaps["mod_name"] = "\"$mod_name\""
+    swaps["mod_id"] = "\"$mod_id\""
+    swaps["mod_version"] = "\"$mod_version\""
+}
 
 dependencies {
     minecraft("com.mojang:minecraft:${mcPlatform.versionString}")
@@ -104,7 +119,9 @@ dependencies {
         "neoForge"("net.neoforged:neoforge:${neoForgeVersion.get(mcPlatform)}")
     }
 
-    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}")
+    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
+        exclude("net.neoforged.fancymodloader", "loader")
+    }
     compileOnly(libs.objc)
 
     // Compat mods
@@ -113,13 +130,14 @@ dependencies {
     }
 }
 
-val accessWidener = if (mcPlatform.version > 1_21_06) "1.21.8-chatshot.accesswidener" else "chatshot.accesswidener"
+val accessWidener = if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener" else "chatshot.accesswidener"
+val mixins = if (mcPlatform.version >= 1_21_06) "1.21.8.mixins.chatshot.json" else "1.21.5.mixins.chatshot.json"
 loom {
     accessWidenerPath = rootProject.file("src/main/resources/$accessWidener")
 
     if (mcPlatform.isForge) forge {
         convertAccessWideners.set(true)
-        mixinConfig("mixins.resourcify.json")
+        mixinConfig(mixins)
     }
 
     runConfigs["client"].isIdeConfigGenerated = true
@@ -192,7 +210,9 @@ tasks {
             "name" to mod_name,
             "version" to mod_version,
             "aw" to accessWidener,
+            "mixins" to mixins,
             "mcVersion" to mcVersion.get(mcPlatform).getLoaderRange(mcPlatform),
+            "fabricApiVersion" to minFabricApiVersion.get(mcPlatform),
         )
 
         properties.forEach { (k, v) -> inputs.property(k, v) }

@@ -21,14 +21,18 @@ public abstract class ChatHudMixin implements ChatHudLocals {
     @Unique
     private int chatBackgroundColor = -1;
 
-    // TODO: port and re-enable for 1.21.8
-//    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
-//    public void onDrawChatLine(GuiGraphics graphics, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, ProfilerFiller profiler, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, GuiMessage.Line visible, int t, double h, int u, int v) {
-//        // Collect some locals here that are used in ChatScreenMixin to draw the buttons,
-//        // we draw in the screen for Exordium compatibility,
-//        this.chatY = m;
-//        this.chatBackgroundColor = v << 24;
-//    }
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V", ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
+    //? if >=1.21.6 {
+    public void onDrawChatLine(GuiGraphics graphics, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, ProfilerFiller profiler, float f, int chatEnd, int l, int m, int n, float g, float h, double d, int o, int p, long q, int r, int v) {
+    //?} else {
+    /*public void onDrawChatLine(GuiGraphics graphics, int currentTick, int mouseX, int mouseY, boolean focused, CallbackInfo ci, int i, int j, ProfilerFiller profiler, float f, int chatEnd, int l, int m, int n, double d, double e, double g, int o, int p, int q, int r, int s, GuiMessage.Line visible, int t, double h, int u, int v) {
+    *///?}
+
+        // Collect some locals here that are used in ChatScreenMixin to draw the buttons,
+        // we draw in the screen for Exordium compatibility,
+        this.chatY = m;
+        this.chatBackgroundColor = v << 24;
+    }
 
     @Unique
     @Override

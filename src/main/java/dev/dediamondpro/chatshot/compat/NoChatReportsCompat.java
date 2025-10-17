@@ -1,5 +1,7 @@
 package dev.dediamondpro.chatshot.compat;
 
+//? if ncr {
+
 import com.aizistral.nochatreports.common.config.NCRConfig;
 
 public class NoChatReportsCompat implements ICompatHandler {
@@ -11,3 +13,5 @@ public class NoChatReportsCompat implements ICompatHandler {
                 ;
     }
 }
+
+//?}

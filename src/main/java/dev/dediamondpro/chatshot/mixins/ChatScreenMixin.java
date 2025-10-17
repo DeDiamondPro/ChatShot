@@ -20,6 +20,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+//? if >=1.21.9 {
+import net.minecraft.client.input.MouseButtonEvent;
+//?}
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -141,8 +145,14 @@ public abstract class ChatScreenMixin extends Screen {
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"))
-    void onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (button != 0) return;
+    //? if <1.21.9 {
+    /*void onMouseClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+         if (button != 0) return;
+    *///?} else {
+    void onMouseClick(MouseButtonEvent arg, boolean bl, CallbackInfoReturnable<Boolean> cir) {
+        if (arg.button() != 0) return;
+    //?}
+
         this.mouseClicked = true;
     }
 
