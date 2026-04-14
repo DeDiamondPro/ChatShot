@@ -95,17 +95,14 @@ public class ChatCopyUtil {
 
     private static Pattern formattingPattern = Pattern.compile("§[0-9a-z]", Pattern.CASE_INSENSITIVE);
     public static void copyString(List<GuiMessage.Line> lines, Component fullMessage, Minecraft client) {
-        String clipboardString;
-        if (fullMessage == null) {
-            CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
-            for (GuiMessage.Line line : lines) {
-                line.content().accept(visitor);
-            }
-            clipboardString = visitor.collect();
-        } else {
-            clipboardString = fullMessage.getString();
+        // Always use the FormattedCharSequence visitor path so that mod-injected widget
+        // components (e.g. Chat Heads player heads whose getString() returns "[name head]")
+        // are never included in the copied text.
+        CollectingCharacterVisitor visitor = new CollectingCharacterVisitor();
+        for (GuiMessage.Line line : lines) {
+            line.content().accept(visitor);
         }
-        clipboardString = formattingPattern.matcher(clipboardString).replaceAll("");
+        String clipboardString = formattingPattern.matcher(visitor.collect()).replaceAll("");
         client.keyboardHandler.setClipboard(clipboardString);
         if (Config.INSTANCE.showCopyMessage) {
             client.gui.getChat().addMessage(Component.translatable("chatshot.text.success"));

@@ -8,7 +8,13 @@ public class CollectingCharacterVisitor implements FormattedCharSink {
 
     @Override
     public boolean accept(int index, Style style, int codePoint) {
-        builder.append((char) codePoint);
+        // Skip private-use area characters (U+E000–U+F8FF, U+F0000–U+FFFFF) used by mods
+        // for custom glyphs/widgets (e.g. Chat Heads player head placeholders).
+        if ((codePoint >= 0xE000 && codePoint <= 0xF8FF)
+                || (codePoint >= 0xF0000 && codePoint <= 0xFFFFF)) {
+            return true;
+        }
+        builder.appendCodePoint(codePoint);
         return true;
     }
 
