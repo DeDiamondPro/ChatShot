@@ -17,9 +17,7 @@ import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import net.minecraft.client.renderer.*;
 import net.minecraft.network.chat.Component;
@@ -43,10 +41,21 @@ import java.util.regex.Pattern;
 /*import com.mojang.blaze3d.buffers.BufferType;
 import com.mojang.blaze3d.buffers.BufferUsage;
 *///?} else {
-import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
+//? >26.1 {
+import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
+//?} else {
+/*import net.minecraft.client.gui.render.state.GuiRenderState;
+*///?}
 //?}
+
+//?if <26.1 {
+/*import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.GuiGraphics;
+*///?}
 
 //?if <1.21.11 {
 /*import net.minecraft.Util;
@@ -108,7 +117,7 @@ public class ChatCopyUtil {
         clipboardString = formattingPattern.matcher(clipboardString).replaceAll("");
         client.keyboardHandler.setClipboard(clipboardString);
         if (Config.INSTANCE.showCopyMessage) {
-            client.gui.getChat().addClientSystemMessage(Component.translatable("chatshot.text.success"));
+            addMessage(client, "chatshot.text.success");
         }
     }
 
@@ -154,7 +163,7 @@ public class ChatCopyUtil {
             rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
-            client.gui.getChat().addClientSystemMessage(Component.translatable("chatshot.noMessageFound"));
+            addMessage(client, "chatshot.noMessageFound");
             return;
         }
 
@@ -163,9 +172,11 @@ public class ChatCopyUtil {
         /*GuiGraphics context = new GuiGraphics(client, customConsumer);
          *///?} else {
         GuiRenderState renderState = new GuiRenderState();
-        //?if >=1.21.11 {
+        //?if >= 26.1 {
         GuiGraphicsExtractor context = new GuiGraphicsExtractor(client, renderState, 0, 0);
-        //?} else
+        //?} else if >=1.21.11 {
+        /*GuiGraphics context = new GuiGraphics(client, renderState, 0, 0);
+        *///?} else
         //GuiGraphics context = new GuiGraphics(client, renderState);
         //? if <1.21.9 {
         /*GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, List.of());
@@ -185,7 +196,10 @@ public class ChatCopyUtil {
 
         int y = 0;
         for (GuiMessage.Line line : lines) {
+            //?if >26.1 {
             context.text(client.font, line.content(), 0, y, 0xFFFFFFFF, shadow);
+            //?} else
+            //context.drawString(client.font, line.content(), 0, y, 0xFFFFFFFF, shadow);
             y += 9;
         }
 
@@ -257,13 +271,13 @@ public class ChatCopyUtil {
                         BufferedImage image = ImageIO.read(inputStream);
                         copySuccessful = ClipboardUtil.copy(image);
                     }
-                    Component message = null;
+                    String message = null;
                     if (copySuccessful) {
-                        if (Config.INSTANCE.showCopyMessage) message = Component.translatable("chatshot.image.success");
+                        if (Config.INSTANCE.showCopyMessage) message = "chatshot.image.success";
                     } else {
-                        message = Component.translatable("chatshot.image.fail");
+                        message = "chatshot.image.fail";
                     }
-                    if (message != null) client.gui.getChat().addClientSystemMessage(message);
+                    if (message != null) addMessage(client, message);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -282,5 +296,12 @@ public class ChatCopyUtil {
             ++i;
         }
         return file;
+    }
+
+    private static void addMessage(Minecraft client, String key) {
+        //?if >26.1 {
+        client.gui.getChat().addClientSystemMessage(Component.translatable(key));
+        //?} else
+        //client.gui.getChat().addMessage(Component.translatable(key));
     }
 }

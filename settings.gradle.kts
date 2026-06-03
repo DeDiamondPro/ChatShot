@@ -5,6 +5,8 @@ pluginManagement {
         maven("https://maven.fabricmc.net")
         maven("https://maven.architectury.dev/")
         maven("https://maven.minecraftforge.net")
+        maven("https://maven.dediamondpro.dev/releases")
+        maven("https://repo.essential.gg/repository/maven-public/")
     }
     dependencyResolutionManagement.versionCatalogs.create("libs")
 }
@@ -14,14 +16,14 @@ plugins {
 }
 
 val platforms = listOf(
-//    "1.21.5-neoforge",
-//    "1.21.5-fabric",
-//    "1.21.8-neoforge",
-//    "1.21.8-fabric",
-//    "1.21.10-fabric",
-//    "1.21.10-neoforge",
-//    "1.21.11-fabric",
-//    "1.21.11-neoforge",
+    "1.21.5-neoforge",
+    "1.21.5-fabric",
+    "1.21.8-neoforge",
+    "1.21.8-fabric",
+    "1.21.10-fabric",
+    "1.21.10-neoforge",
+    "1.21.11-fabric",
+    "1.21.11-neoforge",
     "26.1.2-fabric",
     "26.1.2-neoforge",
 )

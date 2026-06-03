@@ -1,8 +1,6 @@
 package dev.dediamondpro.chatshot.mixins;
 
 import dev.dediamondpro.chatshot.data.ChatHudLocals;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -14,6 +12,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+
+//?if >26.1 {
+import net.minecraft.client.multiplayer.chat.GuiMessage;
+//?} else {
+/*import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.GuiGraphics;
+*///?}
 
 import java.util.List;
 

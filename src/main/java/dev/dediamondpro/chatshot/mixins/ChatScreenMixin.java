@@ -5,8 +5,6 @@ import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import dev.dediamondpro.chatshot.util.ChatCopyUtil;
 import dev.dediamondpro.chatshot.util.Textures;
-import net.minecraft.client.multiplayer.chat.GuiMessage;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -20,7 +18,15 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-//? if >=1.21.9
+//?if >26.1 {
+import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+//?} else {
+/*import net.minecraft.client.GuiMessage;
+import net.minecraft.client.gui.GuiGraphics;
+*///?}
+
+//?if >=1.21.9
 import net.minecraft.client.input.MouseButtonEvent;
 
 //?if <1.21.11
@@ -39,8 +45,13 @@ public abstract class ChatScreenMixin extends Screen {
     @Unique
     private boolean mouseClicked = false;
 
+    //?if >26.1 {
     @Inject(method = "extractRenderState", at = @At("TAIL"))
     void onDraw(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    //?} else {
+    /*@Inject(method = "render", at = @At("TAIL"))
+    void onDraw(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    *///?}
         drawLineButton(context, mouseX, mouseY);
         drawScreenshotButton(context, mouseX, mouseY);
         this.mouseClicked = false;
@@ -59,7 +70,7 @@ public abstract class ChatScreenMixin extends Screen {
     private int chatshot$getMessageLineIndexAt(double d, double e) {
         ChatComponent chatHud = getChatHud();
 
-        if (chatHud.isChatFocused()) {
+        if (chatHud.isChatFocused() /*?if <26.1 { */  /*&& !chatHud.isChatHidden() *//*?}*/) {
             if (!(d < (double)-4.0F) && !(d > (double) Mth.floor((double)chatHud.getWidth() / chatHud.getScale()))) {
                 int i = Math.min(chatHud.getLinesPerPage(), chatHud.trimmedMessages.size());
                 if (e >= (double)0.0F && e < (double)i) {
@@ -99,7 +110,12 @@ public abstract class ChatScreenMixin extends Screen {
     //?}
 
     @Unique
-    private void drawLineButton(GuiGraphicsExtractor context, int mouseX, int mouseY) {
+    private void drawLineButton(
+            //?if >26.1 {
+            GuiGraphicsExtractor context,
+            //?}else
+            //GuiGraphics context,
+            int mouseX, int mouseY) {
         ChatComponent chatHud = getChatHud();
         ChatHudAccessor chatHudA = getChatHudA();
         ChatHudLocals chatHudL = (ChatHudLocals) chatHud;
@@ -172,7 +188,12 @@ public abstract class ChatScreenMixin extends Screen {
     }
 
     @Unique
-    private void drawScreenshotButton(GuiGraphicsExtractor context, int mouseX, int mouseY) {
+    private void drawScreenshotButton(
+            //?if >26.1 {
+            GuiGraphicsExtractor context,
+            //?}else
+            //GuiGraphics context,
+            int mouseX, int mouseY) {
         int buttonX = this.width - 12 - CompatCore.INSTANCE.getButtonOffset();
         int buttonY = this.height - 26;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;

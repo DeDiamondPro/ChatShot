@@ -1,6 +1,10 @@
 package dev.dediamondpro.chatshot.mixins;
 
+//?if >26.1 {
 import net.minecraft.client.multiplayer.chat.GuiMessage;
+//?} else
+//import net.minecraft.client.GuiMessage;
+
 import net.minecraft.client.gui.components.ChatComponent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

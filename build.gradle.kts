@@ -1,6 +1,7 @@
 import dev.dediamondpro.buildsource.Platform
 import dev.dediamondpro.buildsource.VersionDefinition
 import dev.dediamondpro.buildsource.VersionRange
+import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
     alias(libs.plugins.arch.loom)
@@ -10,6 +11,9 @@ plugins {
 buildscript {
     // Set loom platform to correct loader
     extra["loom.platform"] = project.name.split('-')[1]
+    if (project.name[0] != '1') {
+        extra.set("fabric.loom.disableObfuscation", "true")
+    }
 }
 
 val mcPlatform = Platform.fromProject(project)
@@ -99,6 +103,11 @@ val noChatReportsVersion = VersionDefinition(
     "26.1.2-fabric" to "Fabric-26.1-v2.19.0",
     "26.1.2-neoforge" to "NeoForge-26.1-v2.19.0",
 )
+val javaVersion = VersionDefinition(
+    "1.20.1" to "17",
+    "26.1.2" to "25",
+    default = "21",
+)
 
 stonecutter {
     constants["fabric"] = mcPlatform.isFabric
@@ -117,39 +126,44 @@ dependencies {
 
     @Suppress("UnstableApiUsage")
 
-//    if (mcPlatform.version.ma)
-//    mappings(loom.layered {
-//        officialMojangMappings()
-//        parchmentVersion.getOrNull(mcPlatform)?.let {
-//            parchment("org.parchmentmc.data:parchment-$it@zip")
-//        }
-//    })
+    if (mcPlatform.isObfuscated) {
+        @Suppress("UnstableApiUsage")
+        add("mappings", loom.layered {
+            officialMojangMappings()
+            parchmentVersion.getOrNull(mcPlatform)?.let {
+                parchment("org.parchmentmc.data:parchment-$it@zip")
+            }
+        })
+    }
+
+    val modImpl = if (mcPlatform.isObfuscated) "modImplementation" else "implementation"
+    val modComp = if (mcPlatform.isObfuscated) "modCompileOnly" else "compileOnly"
 
     if (mcPlatform.isFabric) {
-        implementation ("net.fabricmc:fabric-loader:0.19.2")
+        add(modImpl, "net.fabricmc:fabric-loader:0.19.2")
 
-        api  ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
-        implementation ("com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
+        add(modImpl, "net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
+        add(modImpl, "com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
     } else if (mcPlatform.isNeoForge) {
         "neoForge"("net.neoforged:neoforge:${neoForgeVersion.get(mcPlatform)}")
     }
 
-    implementation ("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
+    add(modImpl,"dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
         exclude("net.neoforged.fancymodloader", "loader")
     }
     compileOnly(libs.objc)
 
     // Compat mods
     noChatReportsVersion.getOrNull(mcPlatform)?.let {
-        compileOnly("maven.modrinth:no-chat-reports:${it}")
+        add(modComp, "maven.modrinth:no-chat-reports:${it}")
     }
 }
 
 val accessWidener =
-    if (mcPlatform.version >= 26_1_2) "26.1.2-chatshot.accesswidener"
+    if (mcPlatform.version >= 26_01_02) "26.1.2-chatshot.accesswidener"
     else if (mcPlatform.version >= 1_21_11) "1.21.11-chatshot.accesswidener"
-else if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener"
-else "chatshot.accesswidener"
+    else if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener"
+    else "chatshot.accesswidener"
 
 val mixins = if (mcPlatform.version >= 1_21_06) "1.21.8.mixins.chatshot.json" else "1.21.5.mixins.chatshot.json"
 loom {
@@ -170,7 +184,8 @@ base.archivesName.set(
 )
 
 publishMods {
-    file.set(tasks.jar.get().archiveFile)
+    val outputTaskName = if (mcPlatform.isObfuscated) "remapJar" else "jar"
+    file.set(tasks.named<AbstractArchiveTask>(outputTaskName).flatMap { it.archiveFile })
     displayName.set("[${mcVersion.get(mcPlatform).getName()}-${mcPlatform.loaderString}] $mod_name $mod_version")
     version.set(mod_version)
     changelog.set(rootProject.file("changelog.md").readText())
@@ -212,15 +227,25 @@ publishMods {
 }
 
 tasks {
-    jar {
-        finalizedBy("copyJar")
-//        if (mcPlatform.isNeoForge) {
-//            atAccessWideners.add(accessWidener)
-//        }
+    if (mcPlatform.isObfuscated) {
+        named<RemapJarTask>("remapJar") {
+            finalizedBy("copyJar")
+            if (mcPlatform.isNeoForge) {
+                atAccessWideners.add(accessWidener)
+            }
+        }
+    } else {
+        jar {
+            finalizedBy("copyJar")
+        }
     }
     register<Copy>("copyJar") {
         File("${project.rootDir}/jars").mkdir()
-        from(jar.get().archiveFile)
+        if (mcPlatform.isObfuscated) {
+            from(named<RemapJarTask>("remapJar").get().archiveFile)
+        } else {
+            from(jar.get().archiveFile)
+        }
         into("${project.rootDir}/jars")
     }
     clean { delete("${project.rootDir}/jars") }
@@ -251,5 +276,5 @@ tasks {
 }
 
 configure<JavaPluginExtension> {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion.get(mcPlatform)))
 }
