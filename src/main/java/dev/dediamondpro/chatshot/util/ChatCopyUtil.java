@@ -93,7 +93,7 @@ public class ChatCopyUtil {
         }
     }
 
-    private static Pattern formattingPattern = Pattern.compile("§[0-9a-z]");
+    private static Pattern formattingPattern = Pattern.compile("§[0-9a-z]", Pattern.CASE_INSENSITIVE);
     public static void copyString(List<GuiMessage.Line> lines, Component fullMessage, Minecraft client) {
         String clipboardString;
         if (fullMessage == null) {
