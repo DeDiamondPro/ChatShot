@@ -42,7 +42,7 @@ val mcVersion = VersionDefinition(
     "1.21.8-fabric" to VersionRange("1.21.8", "1.21.8", name = "1.21.8"),
     "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
     "1.21.11" to VersionRange("1.21.11", "1.21.11", name = "1.21.11"),
-    "26.1.2" to VersionRange("26.1.0", "26.1.2", name = "26.1.2"),
+    "26.1.2" to VersionRange("26.1.0", "26.1.2", name = "26.1"),
 
 )
 val parchmentVersion = VersionDefinition(
