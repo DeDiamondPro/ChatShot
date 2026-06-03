@@ -1,6 +1,6 @@
 [versions]
 # Build system
-arch_loom = "1.13-SNAPSHOT"
+arch_loom = "1.14-SNAPSHOT"
 shadow = "8.1.1"
 publishing = "0.8.3"
 
@@ -13,6 +13,6 @@ objc = { module = "ca.weblite:java-objc-bridge", version.ref = "objc" }
 
 [plugins]
 # Build system
-arch_loom = { id = "dev.architectury.loom", version.ref = "arch_loom" }
+arch_loom = { id = "dev.architectury.loom-no-remap", version.ref = "arch_loom" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 publishing = { id = "me.modmuss50.mod-publish-plugin", version.ref = "publishing" }

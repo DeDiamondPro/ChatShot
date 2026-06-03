@@ -5,8 +5,8 @@ import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.data.ChatHudLocals;
 import dev.dediamondpro.chatshot.util.ChatCopyUtil;
 import dev.dediamondpro.chatshot.util.Textures;
-import net.minecraft.client.GuiMessage;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,8 +39,8 @@ public abstract class ChatScreenMixin extends Screen {
     @Unique
     private boolean mouseClicked = false;
 
-    @Inject(method = "render", at = @At("TAIL"))
-    void onDraw(GuiGraphics context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    void onDraw(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         drawLineButton(context, mouseX, mouseY);
         drawScreenshotButton(context, mouseX, mouseY);
         this.mouseClicked = false;
@@ -59,7 +59,7 @@ public abstract class ChatScreenMixin extends Screen {
     private int chatshot$getMessageLineIndexAt(double d, double e) {
         ChatComponent chatHud = getChatHud();
 
-        if (chatHud.isChatFocused() && !chatHud.isChatHidden()) {
+        if (chatHud.isChatFocused()) {
             if (!(d < (double)-4.0F) && !(d > (double) Mth.floor((double)chatHud.getWidth() / chatHud.getScale()))) {
                 int i = Math.min(chatHud.getLinesPerPage(), chatHud.trimmedMessages.size());
                 if (e >= (double)0.0F && e < (double)i) {
@@ -99,7 +99,7 @@ public abstract class ChatScreenMixin extends Screen {
     //?}
 
     @Unique
-    private void drawLineButton(GuiGraphics context, int mouseX, int mouseY) {
+    private void drawLineButton(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         ChatComponent chatHud = getChatHud();
         ChatHudAccessor chatHudA = getChatHudA();
         ChatHudLocals chatHudL = (ChatHudLocals) chatHud;
@@ -172,7 +172,7 @@ public abstract class ChatScreenMixin extends Screen {
     }
 
     @Unique
-    private void drawScreenshotButton(GuiGraphics context, int mouseX, int mouseY) {
+    private void drawScreenshotButton(GuiGraphicsExtractor context, int mouseX, int mouseY) {
         int buttonX = this.width - 12 - CompatCore.INSTANCE.getButtonOffset();
         int buttonY = this.height - 26;
         boolean hovering = mouseX >= buttonX && mouseX <= buttonX + 10 && mouseY >= buttonY && mouseY <= buttonY + 10;

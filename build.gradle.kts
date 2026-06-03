@@ -37,7 +37,9 @@ val mcVersion = VersionDefinition(
     // We need newer fabric api version
     "1.21.8-fabric" to VersionRange("1.21.8", "1.21.8", name = "1.21.8"),
     "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
-    "1.21.11" to VersionRange("1.21.11", "1.21.11", name = "1.21.11")
+    "1.21.11" to VersionRange("1.21.11", "1.21.11", name = "1.21.11"),
+    "26.1.2" to VersionRange("26.1.0", "26.1.2", name = "26.1.2"),
+
 )
 val parchmentVersion = VersionDefinition(
     "1.20.1" to "1.20.1:2023.09.03",
@@ -54,6 +56,7 @@ val fabricApiVersion = VersionDefinition(
     "1.21.8" to "0.133.4+1.21.8",
     "1.21.10" to "0.135.0+1.21.10",
     "1.21.11" to "0.141.1+1.21.11",
+    "26.1.2" to "0.147.0+26.1.2",
 )
 val minFabricApiVersion = VersionDefinition(
     "1.21.8" to ">=0.131.0",
@@ -67,6 +70,7 @@ val modMenuVersion = VersionDefinition(
     "1.21.8" to "15.0.0",
     "1.21.10" to "16.0.0-rc.1",
     "1.21.11" to "17.0.0-beta.2",
+    "26.1.2" to "18.0.0-alpha.8"
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
@@ -74,8 +78,10 @@ val neoForgeVersion = VersionDefinition(
     "1.21.8" to "21.8.47",
     "1.21.10" to "21.10.18-beta",
     "1.21.11" to "21.11.35-beta",
+    "26.1.2" to "26.1.2.36-beta"
 )
 val yaclVersion = VersionDefinition(
+    "26.1.2" to "3.9.3+26.1-${mcPlatform.loaderString}",
     "1.21.8" to "3.8.2+1.21.6-${mcPlatform.loaderString}",
     default = "3.8.2+${mcPlatform.name}",
 )
@@ -90,6 +96,8 @@ val noChatReportsVersion = VersionDefinition(
     "1.21.10-neoforge" to "NeoForge-1.21.10-v2.16.0",
     "1.21.11-fabric" to "Fabric-1.21.11-v2.18.0",
     "1.21.11-neoforge" to "NeoForge-1.21.11-v2.18.0",
+    "26.1.2-fabric" to "Fabric-26.1-v2.19.0",
+    "26.1.2-neoforge" to "NeoForge-26.1-v2.19.0",
 )
 
 stonecutter {
@@ -108,34 +116,38 @@ dependencies {
     minecraft("com.mojang:minecraft:${mcPlatform.versionString}")
 
     @Suppress("UnstableApiUsage")
-    mappings(loom.layered {
-        officialMojangMappings()
-        parchmentVersion.getOrNull(mcPlatform)?.let {
-            parchment("org.parchmentmc.data:parchment-$it@zip")
-        }
-    })
+
+//    if (mcPlatform.version.ma)
+//    mappings(loom.layered {
+//        officialMojangMappings()
+//        parchmentVersion.getOrNull(mcPlatform)?.let {
+//            parchment("org.parchmentmc.data:parchment-$it@zip")
+//        }
+//    })
 
     if (mcPlatform.isFabric) {
-        modImplementation("net.fabricmc:fabric-loader:0.17.2")
+        implementation ("net.fabricmc:fabric-loader:0.19.2")
 
-        modImplementation("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
-        modImplementation("com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
+        api  ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion.get(mcPlatform)}")
+        implementation ("com.terraformersmc:modmenu:${modMenuVersion.get(mcPlatform)}")
     } else if (mcPlatform.isNeoForge) {
         "neoForge"("net.neoforged:neoforge:${neoForgeVersion.get(mcPlatform)}")
     }
 
-    modImplementation("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
+    implementation ("dev.isxander:yet-another-config-lib:${yaclVersion.get(mcPlatform)}") {
         exclude("net.neoforged.fancymodloader", "loader")
     }
     compileOnly(libs.objc)
 
     // Compat mods
     noChatReportsVersion.getOrNull(mcPlatform)?.let {
-        modCompileOnly("maven.modrinth:no-chat-reports:${it}")
+        compileOnly("maven.modrinth:no-chat-reports:${it}")
     }
 }
 
-val accessWidener = if (mcPlatform.version >= 1_21_11) "1.21.11-chatshot.accesswidener"
+val accessWidener =
+    if (mcPlatform.version >= 26_1_2) "26.1.2-chatshot.accesswidener"
+    else if (mcPlatform.version >= 1_21_11) "1.21.11-chatshot.accesswidener"
 else if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener"
 else "chatshot.accesswidener"
 
@@ -158,7 +170,7 @@ base.archivesName.set(
 )
 
 publishMods {
-    file.set(tasks.remapJar.get().archiveFile)
+    file.set(tasks.jar.get().archiveFile)
     displayName.set("[${mcVersion.get(mcPlatform).getName()}-${mcPlatform.loaderString}] $mod_name $mod_version")
     version.set(mod_version)
     changelog.set(rootProject.file("changelog.md").readText())
@@ -200,15 +212,15 @@ publishMods {
 }
 
 tasks {
-    remapJar {
+    jar {
         finalizedBy("copyJar")
-        if (mcPlatform.isNeoForge) {
-            atAccessWideners.add(accessWidener)
-        }
+//        if (mcPlatform.isNeoForge) {
+//            atAccessWideners.add(accessWidener)
+//        }
     }
     register<Copy>("copyJar") {
         File("${project.rootDir}/jars").mkdir()
-        from(remapJar.get().archiveFile)
+        from(jar.get().archiveFile)
         into("${project.rootDir}/jars")
     }
     clean { delete("${project.rootDir}/jars") }
@@ -239,5 +251,5 @@ tasks {
 }
 
 configure<JavaPluginExtension> {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }

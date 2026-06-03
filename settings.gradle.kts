@@ -10,18 +10,20 @@ pluginManagement {
 }
 
 plugins {
-    id("dev.kikugie.stonecutter") version "0.8.3"
+    id("dev.kikugie.stonecutter") version "0.9.3"
 }
 
 val platforms = listOf(
-    "1.21.5-neoforge",
-    "1.21.5-fabric",
-    "1.21.8-neoforge",
-    "1.21.8-fabric",
-    "1.21.10-fabric",
-    "1.21.10-neoforge",
-    "1.21.11-fabric",
-    "1.21.11-neoforge",
+//    "1.21.5-neoforge",
+//    "1.21.5-fabric",
+//    "1.21.8-neoforge",
+//    "1.21.8-fabric",
+//    "1.21.10-fabric",
+//    "1.21.10-neoforge",
+//    "1.21.11-fabric",
+//    "1.21.11-neoforge",
+    "26.1.2-fabric",
+    "26.1.2-neoforge",
 )
 
 stonecutter {
@@ -31,7 +33,7 @@ stonecutter {
         for (version in platforms) {
             version(version, version.split('-')[0])
         }
-        vcsVersion = "1.21.11-fabric"
+        vcsVersion = "26.1.2-fabric"
     }
 }
 

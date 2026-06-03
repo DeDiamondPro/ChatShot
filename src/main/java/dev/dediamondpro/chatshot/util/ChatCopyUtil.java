@@ -17,9 +17,9 @@ import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.util.clipboard.ClipboardUtil;
 import dev.dediamondpro.chatshot.util.clipboard.MacOSCompat;
 import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMaps;
-import net.minecraft.client.GuiMessage;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 
 import net.minecraft.client.renderer.*;
 import net.minecraft.network.chat.Component;
@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
 /*import com.mojang.blaze3d.buffers.BufferType;
 import com.mojang.blaze3d.buffers.BufferUsage;
 *///?} else {
-import net.minecraft.client.gui.render.state.GuiRenderState;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.fog.FogRenderer;
 //?}
@@ -108,7 +108,7 @@ public class ChatCopyUtil {
         clipboardString = formattingPattern.matcher(clipboardString).replaceAll("");
         client.keyboardHandler.setClipboard(clipboardString);
         if (Config.INSTANCE.showCopyMessage) {
-            client.gui.getChat().addMessage(Component.translatable("chatshot.text.success"));
+            client.gui.getChat().addClientSystemMessage(Component.translatable("chatshot.text.success"));
         }
     }
 
@@ -154,7 +154,7 @@ public class ChatCopyUtil {
             rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
-            client.gui.getChat().addMessage(Component.translatable("chatshot.noMessageFound"));
+            client.gui.getChat().addClientSystemMessage(Component.translatable("chatshot.noMessageFound"));
             return;
         }
 
@@ -164,7 +164,7 @@ public class ChatCopyUtil {
          *///?} else {
         GuiRenderState renderState = new GuiRenderState();
         //?if >=1.21.11 {
-        GuiGraphics context = new GuiGraphics(client, renderState, 0, 0);
+        GuiGraphicsExtractor context = new GuiGraphicsExtractor(client, renderState, 0, 0);
         //?} else
         //GuiGraphics context = new GuiGraphics(client, renderState);
         //? if <1.21.9 {
@@ -185,7 +185,7 @@ public class ChatCopyUtil {
 
         int y = 0;
         for (GuiMessage.Line line : lines) {
-            context.drawString(client.font, line.content(), 0, y, 0xFFFFFFFF, shadow);
+            context.text(client.font, line.content(), 0, y, 0xFFFFFFFF, shadow);
             y += 9;
         }
 
@@ -263,7 +263,7 @@ public class ChatCopyUtil {
                     } else {
                         message = Component.translatable("chatshot.image.fail");
                     }
-                    if (message != null) client.gui.getChat().addMessage(message);
+                    if (message != null) client.gui.getChat().addClientSystemMessage(message);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

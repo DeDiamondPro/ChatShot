@@ -1,8 +1,8 @@
 package dev.dediamondpro.chatshot.mixins;
 
 import dev.dediamondpro.chatshot.data.ChatHudLocals;
-import net.minecraft.client.GuiMessage;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.chat.GuiMessage;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ChatComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.profiling.ProfilerFiller;
