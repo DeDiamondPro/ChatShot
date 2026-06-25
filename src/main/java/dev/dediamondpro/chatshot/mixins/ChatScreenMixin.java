@@ -238,7 +238,10 @@ public abstract class ChatScreenMixin extends Screen {
 
     @Unique
     private ChatComponent getChatHud() {
-        return this.minecraft.gui.getChat();
+        //?if >=26.2 {
+        return this.minecraft.gui.hud.getChat();
+        //?} else
+        //return this.minecraft.gui.getChat();
     }
 
     @Unique

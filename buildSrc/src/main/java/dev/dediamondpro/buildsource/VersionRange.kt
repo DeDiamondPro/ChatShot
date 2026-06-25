@@ -1,6 +1,6 @@
 /*
  * This file is part of ChatShot
- * Copyright (C) 2025 DeDiamondPro
+ * Copyright (C) 2025-2026 DeDiamondPro
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,9 @@ class VersionRange(
     val startVersion: String,
     val endVersion: String,
     private val name: String = "$startVersion-$endVersion",
-    private val openEnd: Boolean = false
+    private val openEnd: Boolean = false,
+    private val allowAll: Boolean = false, // Mostly used for pre releases and release candidates
+    private val exclusiveUpperBound: String? = null, // Exclusive upper bound for loader range only, does not affect publishing
 ) {
     fun getName(): String {
         return name;
@@ -32,10 +34,21 @@ class VersionRange(
     }
 
     fun getFabricRange(): String {
-        return ">=$startVersion" + if (!openEnd) " <=$endVersion" else ""
+        if (allowAll) return "*"
+        return buildString {
+            append(">=$startVersion")
+            if (!openEnd && exclusiveUpperBound != null) append(" <$exclusiveUpperBound")
+            else if (!openEnd) append(" <=$endVersion")
+        }
     }
 
     fun getForgeRange(): String {
-        return "[$startVersion," + if (!openEnd) "$endVersion]" else ")"
+        if (allowAll) return "[1,)"
+        return buildString {
+            append("[$startVersion,")
+            if (!openEnd && exclusiveUpperBound != null) append("$exclusiveUpperBound)")
+            else if (!openEnd) append("$endVersion]")
+            else append(")")
+        }
     }
 }

@@ -43,6 +43,7 @@ val mcVersion = VersionDefinition(
     "1.21.10" to VersionRange("1.21.9", "1.21.10", name = "1.21.10"),
     "1.21.11" to VersionRange("1.21.11", "1.21.11", name = "1.21.11"),
     "26.1.2" to VersionRange("26.1", "26.1.2", name = "26.1"),
+    "26.2" to VersionRange("26.2", "26.2", exclusiveUpperBound = "26.3", name = "26.2"),
 
 )
 val parchmentVersion = VersionDefinition(
@@ -61,6 +62,7 @@ val fabricApiVersion = VersionDefinition(
     "1.21.10" to "0.135.0+1.21.10",
     "1.21.11" to "0.141.1+1.21.11",
     "26.1.2" to "0.147.0+26.1.2",
+    "26.2" to "0.153.0+26.2",
 )
 val minFabricApiVersion = VersionDefinition(
     "1.21.8" to ">=0.131.0",
@@ -74,7 +76,8 @@ val modMenuVersion = VersionDefinition(
     "1.21.8" to "15.0.0",
     "1.21.10" to "16.0.0-rc.1",
     "1.21.11" to "17.0.0-beta.2",
-    "26.1.2" to "18.0.0-alpha.8"
+    "26.1.2" to "18.0.0-alpha.8",
+    "26.2" to "20.0.0-beta.4",
 )
 val neoForgeVersion = VersionDefinition(
     "1.21.4" to "21.4.124",
@@ -82,9 +85,10 @@ val neoForgeVersion = VersionDefinition(
     "1.21.8" to "21.8.47",
     "1.21.10" to "21.10.18-beta",
     "1.21.11" to "21.11.35-beta",
-    "26.1.2" to "26.1.2.36-beta"
+    "26.1.2" to "26.1.2.36-beta",
 )
 val yaclVersion = VersionDefinition(
+    "26.2" to "3.9.4+26.2-${mcPlatform.loaderString}",
     "26.1.2" to "3.9.3+26.1-${mcPlatform.loaderString}",
     "1.21.8" to "3.8.2+1.21.6-${mcPlatform.loaderString}",
     default = "3.8.2+${mcPlatform.name}",
@@ -102,10 +106,12 @@ val noChatReportsVersion = VersionDefinition(
     "1.21.11-neoforge" to "NeoForge-1.21.11-v2.18.0",
     "26.1.2-fabric" to "Fabric-26.1-v2.19.0",
     "26.1.2-neoforge" to "NeoForge-26.1-v2.19.0",
+    "26.2-fabric" to "Fabric-26.2-v2.20.0",
 )
 val javaVersion = VersionDefinition(
     "1.20.1" to "17",
     "26.1.2" to "25",
+    "26.2" to "25",
     default = "21",
 )
 
@@ -160,7 +166,8 @@ dependencies {
 }
 
 val accessWidener =
-    if (mcPlatform.version >= 26_01_02) "26.1.2-chatshot.accesswidener"
+    if (mcPlatform.version >= 26_02_00) "26.2-chatshot.accesswidener"
+    else if (mcPlatform.version >= 26_01_02) "26.1.2-chatshot.accesswidener"
     else if (mcPlatform.version >= 1_21_11) "1.21.11-chatshot.accesswidener"
     else if (mcPlatform.version >= 1_21_06) "1.21.8-chatshot.accesswidener"
     else "chatshot.accesswidener"
@@ -207,6 +214,9 @@ publishMods {
         } else if (mcPlatform.isForgeLike) {
             requires("yacl")
         }
+
+        clientRequired = true
+        serverRequired = false
     }
     modrinth {
         projectId.set("X2Zy7Oi6")

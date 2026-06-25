@@ -24,6 +24,10 @@ import dev.dediamondpro.chatshot.util.GuiRendererInterface;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.MappableRingBuffer;
+//?if >=26.2 {
+import net.minecraft.client.renderer.StagedVertexBuffer;
+import com.mojang.blaze3d.textures.GpuTexture;
+//?}
 //? if neoforge {
 /*import net.neoforged.neoforge.client.gui.PictureInPictureRendererPool;
  *///?}
@@ -51,15 +55,23 @@ public class GuiRendererMixin implements GuiRendererInterface {
     private List<GuiRenderer.Draw> draws;
     @Shadow
     private int firstDrawIndexAfterBlur;
-    @Final
+    //?if <26.2 {
+    /*@Final
     @Shadow
     private List<GuiRenderer.MeshToDraw> meshesToDraw;
+    *///?}
     @Final
     @Shadow
     GuiRenderState renderState;
-    @Final
+    //?if <26.2 {
+    /*@Final
     @Shadow
     private Map<VertexFormat, MappableRingBuffer> vertexBuffers;
+    *///?} else {
+    @Final
+    @Shadow
+    private StagedVertexBuffer vertexBuffer;
+    //?}
 
     //?if >26.1 {
     @Final
@@ -82,14 +94,37 @@ public class GuiRendererMixin implements GuiRendererInterface {
     private void clearUnusedOversizedItemRenderers() {
     }
 
-    @Shadow
+    //?if <26.2 {
+    /*@Shadow
     private void executeDrawRange(Supplier<String> supplier, RenderTarget arg, GpuBufferSlice gpuBufferSlice, GpuBufferSlice gpuBufferSlice2, GpuBuffer gpuBuffer, VertexFormat.IndexType arg2, int j, int k) {
     }
+    *///?} else {
+    @Shadow
+    private void executeDrawRange(Supplier<String> supplier, RenderTarget arg, GpuBufferSlice gpuBufferSlice, int j, int k) {
+    }
+    //?}
 
     @Unique
     void chatShot$draw(GpuBufferSlice gpuBufferSlice, RenderTarget renderTarget) {
         if (!this.draws.isEmpty()) {
-            //?if >26.1 {
+            //?if >=26.2 {
+            WindowRenderState windowState = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
+            this.guiProjection.setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
+            RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
+            GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F));
+            if (this.firstDrawIndexAfterBlur > 0) {
+                this.executeDrawRange(() -> "GUI before blur", renderTarget, dynamicTransforms, 0, Math.min(this.firstDrawIndexAfterBlur, this.draws.size()));
+            }
+            if (this.draws.size() > this.firstDrawIndexAfterBlur) {
+                GpuTexture depthTexture = renderTarget.getDepthTexture();
+                if (depthTexture == null) {
+                    return;
+                }
+                RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(depthTexture, 1.0F);
+                this.executeDrawRange(() -> "GUI after blur", renderTarget, dynamicTransforms, this.firstDrawIndexAfterBlur, this.draws.size());
+            }
+            //?} else {
+            /*//?if >26.1 {
             WindowRenderState windowState = Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState;
             this.guiProjection.setupOrtho(1000.0F, 11000.0F, (float)windowState.width / (float)windowState.guiScale, (float)windowState.height / (float)windowState.guiScale, true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
@@ -123,20 +158,32 @@ public class GuiRendererMixin implements GuiRendererInterface {
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(renderTarget.getDepthTexture(), (double) 1.0F);
                 this.executeDrawRange(() -> "GUI after blur", renderTarget, gpuBufferSlice, gpubufferslice, gpubuffer, vertexformat$indextype, this.firstDrawIndexAfterBlur, this.draws.size());
             }
+            *///?}
         }
     }
 
     @Override
     public void chatShot$render(GpuBufferSlice gpuBufferSlice, RenderTarget renderTarget) {
         this.prepare();
+        //?if >=26.2 {
+        this.vertexBuffer.upload();
+        //?}
         this.chatShot$draw(gpuBufferSlice, renderTarget);
 
-        for (MappableRingBuffer mappableringbuffer : this.vertexBuffers.values()) {
+        //?if <26.2 {
+        /*for (MappableRingBuffer mappableringbuffer : this.vertexBuffers.values()) {
             mappableringbuffer.rotate();
         }
+        *///?}
+        //?if >=26.2 {
+        this.vertexBuffer.endDraw();
+        this.vertexBuffer.endFrame();
+        //?}
 
         this.draws.clear();
-        this.meshesToDraw.clear();
+        //?if <26.2 {
+        /*this.meshesToDraw.clear();
+        *///?}
         this.renderState.reset();
         this.firstDrawIndexAfterBlur = Integer.MAX_VALUE;
         this.clearUnusedOversizedItemRenderers();

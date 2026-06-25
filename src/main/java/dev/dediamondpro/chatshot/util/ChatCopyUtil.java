@@ -66,8 +66,9 @@ import net.minecraft.client.renderer.rendertype.RenderSetup;
 //?}
 
 public class ChatCopyUtil {
-    //?if <1.21.11 {
-    /*static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create(
+    //?if <26.2 {
+    /*//?if <1.21.11 {
+    /^static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create(
             "chatshot_text",
             786432,
             false,
@@ -77,7 +78,7 @@ public class ChatCopyUtil {
                     .setOutputState(new RenderStateShard.OutputStateShard("chatshot_fbo", () -> (rt)))
                     .setLightmapState(RenderStateShard.LIGHTMAP).createCompositeState(false))
     );
-    *///?} else {
+    ^///?} else {
     static public Function<RenderTarget, RenderType> CUSTOM_TEXT_LAYER = (RenderTarget rt) -> (RenderType.create(
             "chatshot_text",
             RenderSetup.builder(RenderPipelines.TEXT)
@@ -85,6 +86,7 @@ public class ChatCopyUtil {
                     .createRenderSetup()
     ));
     //?}
+    *///?}
 
     public static void copy(List<GuiMessage.Line> lines, Component fullMessage, Minecraft client) {
         //? if <1.21.9 {
@@ -121,7 +123,8 @@ public class ChatCopyUtil {
         }
     }
 
-    public static class OverrideVertexProvider extends MultiBufferSource.BufferSource {
+    //?if <26.2 {
+    /*public static class OverrideVertexProvider extends MultiBufferSource.BufferSource {
         private final RenderType currentLayer;
         public BufferBuilder bufferBuilder;
 
@@ -141,6 +144,7 @@ public class ChatCopyUtil {
             this.endBatch(this.currentLayer);
         }
     }
+    *///?}
 
     public static void copyImage(List<GuiMessage.Line> lines, Minecraft client) {
         boolean shadow = Config.INSTANCE.shadow;
@@ -160,14 +164,19 @@ public class ChatCopyUtil {
 
         RenderTarget rt;
         try {
-            rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
+            //?if >=26.2 {
+            rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
+            //?} else
+            //rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
         } catch (IllegalArgumentException e) {
             // If we get this error that mean the window is too big or the chat is empty
             addMessage(client, "chatshot.noMessageFound");
             return;
         }
 
-        OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
+        //?if <26.2 {
+        /*OverrideVertexProvider customConsumer = new OverrideVertexProvider(new ByteBufferBuilder(256), rt);
+        *///?}
         //? if <1.21.6 {
         /*GuiGraphics context = new GuiGraphics(client, customConsumer);
          *///?} else {
@@ -180,13 +189,24 @@ public class ChatCopyUtil {
         //GuiGraphics context = new GuiGraphics(client, renderState);
         //? if <1.21.9 {
         /*GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, List.of());
-         *///?} else {
-        GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, new SubmitNodeStorage(), client.gameRenderer.getFeatureRenderDispatcher(), List.of());
-        //?}
+         *///?} else if >=26.2 {
+        GuiRenderer guiRenderer = new GuiRenderer(renderState, client.gameRenderer.featureRenderDispatcher(), List.of());
+        //?} else {
+        /*GuiRenderer guiRenderer = new GuiRenderer(renderState, customConsumer, new SubmitNodeStorage(), client.gameRenderer.getFeatureRenderDispatcher(), List.of());
+        *///?}
         //?}
 
 
-        cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
+        //?if >=26.2 {
+        GpuTexture colorTexture = rt.getColorTexture();
+        if (colorTexture == null) {
+            System.out.println("ChatShot: Failed to copy image, color texture is null");
+            addMessage(client, "chatshot.image.fail");
+            return;
+        }
+        cmd.clearColorTexture(rt.getColorTexture(), new org.joml.Vector4f(0.0f, 0.0f, 0.0f, 0.0f));
+        //?} else
+        //cmd.clearColorTexture(rt.getColorTexture(), 0x00000000);
 
         context.pose().scale(
                 (float) client.getWindow().getGuiScaledWidth() / width,
@@ -209,10 +229,15 @@ public class ChatCopyUtil {
         //? if <1.21.6 {
         /*context.flush();
          *///?} else {
-        ((GuiRendererInterface) guiRenderer).chatShot$render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE), rt);
+        //?if >=26.2 {
+        ((GuiRendererInterface) guiRenderer).chatShot$render(null, rt);
+        //?} else
+        //((GuiRendererInterface) guiRenderer).chatShot$render(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE), rt);
         //?}
 
-        customConsumer.finishDrawing();
+        //?if <26.2 {
+        /*customConsumer.finishDrawing();
+        *///?}
         ChatCopyUtil.saveImage(rt, client);
         //? if >=1.21.6 {
         guiRenderer.close();
@@ -224,10 +249,19 @@ public class ChatCopyUtil {
         int j = rt.height;
 
         GpuTexture gpuTexture = rt.getColorTexture();
+        if (gpuTexture == null) {
+            System.out.println("ChatShot: Failed to copy image, gpu texture is null");
+            addMessage(client, "chatshot.image.fail");
+            return;
+        }
+        //?if >=26.2 {
+        int pixelSize = gpuTexture.getFormat().blockSize();
+        //?} else
+        //int pixelSize = gpuTexture.getFormat().pixelSize();
         GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
                 null,
                 /*? >=1.21.6 {*/ GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ /*?} else {*/ /*BufferType.PIXEL_PACK, BufferUsage.STATIC_READ *//*?}*/,
-                rt.width * rt.height * rt.getColorTexture().getFormat().pixelSize()
+                (long) rt.width * rt.height * pixelSize
         );
 
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
@@ -236,16 +270,18 @@ public class ChatCopyUtil {
             try (
                     //? if <1.21.6 {
                     /*GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
-                     *///?} else {
-                    GpuBuffer.MappedView readView = commandEncoder.mapBuffer(gpuBuffer, true, false);
-                    //?}
+                     *///?} else if >=26.2 {
+                    com.mojang.blaze3d.buffers.GpuBufferSlice.MappedView readView = gpuBuffer.map(true, false);
+                    //?} else {
+                    /*GpuBuffer.MappedView readView = commandEncoder.mapBuffer(gpuBuffer, true, false);
+                    *///?}
 
                     NativeImage nativeImage = new NativeImage(i, j, false)
             ) {
 
                 for (int k = 0; k < j; k++) {
                     for (int l = 0; l < i; l++) {
-                        int m = readView.data().getInt((l + k * i) * gpuTexture.getFormat().pixelSize());
+                        int m = readView.data().getInt((l + k * i) * pixelSize);
                         nativeImage.setPixelABGR(l, j - k - 1, m);
                     }
                 }
@@ -299,9 +335,11 @@ public class ChatCopyUtil {
     }
 
     private static void addMessage(Minecraft client, String key) {
-        //?if >26.1 {
-        client.gui.getChat().addClientSystemMessage(Component.translatable(key));
-        //?} else
+        //?if >=26.2 {
+        client.gui.hud.getChat().addClientSystemMessage(Component.translatable(key));
+        //?} else if >26.1 {
+        /*client.gui.getChat().addClientSystemMessage(Component.translatable(key));
+        *///?} else
         //client.gui.getChat().addMessage(Component.translatable(key));
     }
 }
