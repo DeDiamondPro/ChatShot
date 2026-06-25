@@ -261,7 +261,7 @@ public class ChatCopyUtil {
         GpuBuffer gpuBuffer = RenderSystem.getDevice().createBuffer(
                 null,
                 /*? >=1.21.6 {*/ GpuBuffer.USAGE_COPY_DST | GpuBuffer.USAGE_MAP_READ /*?} else {*/ /*BufferType.PIXEL_PACK, BufferUsage.STATIC_READ *//*?}*/,
-                (long) rt.width * rt.height * pixelSize
+                rt.width * rt.height * pixelSize
         );
 
         CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
