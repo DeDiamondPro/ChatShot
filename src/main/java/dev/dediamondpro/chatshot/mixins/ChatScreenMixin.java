@@ -1,5 +1,6 @@
 package dev.dediamondpro.chatshot.mixins;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.dediamondpro.chatshot.compat.CompatCore;
 import dev.dediamondpro.chatshot.config.Config;
 import dev.dediamondpro.chatshot.data.ChatHudLocals;
@@ -230,7 +231,7 @@ public abstract class ChatScreenMixin extends Screen {
          if (button != 0) return;
     *///?} else {
     void onMouseClick(MouseButtonEvent arg, boolean bl, CallbackInfoReturnable<Boolean> cir) {
-        if (arg.button() != 0) return;
+        if (arg.button() != InputConstants.MOUSE_BUTTON_LEFT) return;
     //?}
 
         this.mouseClicked = true;
@@ -239,9 +240,9 @@ public abstract class ChatScreenMixin extends Screen {
     @Unique
     private ChatComponent getChatHud() {
         //?if >=26.2 {
-        return this.minecraft.gui.hud.getChat();
-        //?} else
-        //return this.minecraft.gui.getChat();
+        /*return this.minecraft.gui.hud.getChat();
+        *///?} else
+        return this.minecraft.gui.getChat();
     }
 
     @Unique
