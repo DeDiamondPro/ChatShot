@@ -1,7 +1,7 @@
 plugins {
     id("dev.kikugie.stonecutter")
 }
-stonecutter active "26.2-fabric" /* [SC] DO NOT EDIT */
+stonecutter active "26.3-fabric" /* [SC] DO NOT EDIT */
 
 stonecutter tasks {
     val ordering = versionComparator.thenComparingInt {

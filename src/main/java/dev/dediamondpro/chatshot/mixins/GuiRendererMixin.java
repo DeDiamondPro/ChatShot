@@ -14,20 +14,36 @@ import net.minecraft.client.gui.render.state.pip.PictureInPictureRenderState;
 import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
 *///?}
 
+//?if >= 26.2 {
+import net.minecraft.client.renderer.StagedVertexBuffer;
+//?}
+
 import com.mojang.blaze3d.ProjectionType;
-import com.mojang.blaze3d.buffers.GpuBuffer;
+//?if >=26.3 {
+
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+
+//?} else {
+
+/*import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.vertex.VertexFormat;
+*///?}
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.dediamondpro.chatshot.util.GuiRendererInterface;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.render.GuiRenderer;
 import net.minecraft.client.renderer.MappableRingBuffer;
-//?if >=26.2 {
-import net.minecraft.client.renderer.StagedVertexBuffer;
+//?if 26.2 {
+/*
 import com.mojang.blaze3d.textures.GpuTexture;
-//?}
+*///?}
+
 //? if neoforge {
 /*import net.neoforged.neoforge.client.gui.PictureInPictureRendererPool;
  *///?}
@@ -183,7 +199,7 @@ public class GuiRendererMixin implements GuiRendererInterface {
         this.draws.clear();
         //?if <26.2 {
         /*this.meshesToDraw.clear();
-        *///?}
+         *///?}
         this.renderState.reset();
         this.firstDrawIndexAfterBlur = Integer.MAX_VALUE;
         this.clearUnusedOversizedItemRenderers();

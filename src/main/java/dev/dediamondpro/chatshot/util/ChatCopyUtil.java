@@ -1,14 +1,35 @@
 package dev.dediamondpro.chatshot.util;
 
+//?if >=26.3 {
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.renderpearl.api.GpuFormat;
+import com.mojang.renderpearl.api.textures.GpuTexture;
+import com.mojang.renderpearl.api.buffers.GpuBuffer;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.CommandEncoder;
+import com.mojang.renderpearl.api.device.GpuDevice;
+
+//?} else if >= 1.21.5 {
+/*import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.buffers.GpuBuffer;
+import com.mojang.blaze3d.systems.CommandEncoder;
+import com.mojang.blaze3d.systems.GpuDevice;
+import org.lwjgl.glfw.GLFW;
+
+*///?}
+
+//?if 26.2 {
+/*import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.GpuFormat;
+*/
+//?}
+
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.GpuDevice;
+
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -23,7 +44,6 @@ import net.minecraft.client.renderer.*;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -92,10 +112,13 @@ public class ChatCopyUtil {
         //? if <1.21.9 {
         /*if (GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(client.getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
-            *///?} else {
-        if (GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
+            */
+        //?} else if >=26.3 {
+        if ( InputConstants.isKeyDown(InputConstants.KEY_LSHIFT) || InputConstants.isKeyDown(InputConstants.KEY_RSHIFT)) {
+        //?} else {
+        /*if (GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS
                 || GLFW.glfwGetKey(client.getWindow().handle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS) {
-            //?}
+            *///?}
             if (Config.INSTANCE.shiftClickAction == Config.CopyType.TEXT) copyString(lines, fullMessage, client);
             else copyImage(lines, client);
         } else {
@@ -164,8 +187,10 @@ public class ChatCopyUtil {
 
         RenderTarget rt;
         try {
-            //?if >=26.2 {
-            rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false, com.mojang.blaze3d.GpuFormat.RGBA8_UNORM);
+            //?if >=26.3 {
+            rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, GpuFormat.RGBA8_UNORM, GpuFormat.D32_FLOAT);
+            //?} else if >=26.2 {
+            //rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false, GpuFormat.RGBA8_UNORM);
             //?} else
             //rt = new TextureTarget(null, width * scaleFactor, height * scaleFactor, false);
         } catch (IllegalArgumentException e) {
@@ -271,7 +296,7 @@ public class ChatCopyUtil {
                     //? if <1.21.6 {
                     /*GpuBuffer.ReadView readView = commandEncoder.readBuffer(gpuBuffer);
                      *///?} else if >=26.2 {
-                    com.mojang.blaze3d.buffers.GpuBufferSlice.MappedView readView = gpuBuffer.map(true, false);
+                    GpuBufferSlice.MappedView readView = gpuBuffer.map(true, false);
                     //?} else {
                     /*GpuBuffer.MappedView readView = commandEncoder.mapBuffer(gpuBuffer, true, false);
                     *///?}
