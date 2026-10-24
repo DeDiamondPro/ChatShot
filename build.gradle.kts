@@ -90,7 +90,7 @@ val neoForgeVersion = VersionDefinition(
     "1.21.11" to "21.11.35-beta",
     "26.1.2" to "26.1.2.36-beta",
     "26.2" to "26.2.0.88",
-    "26.3" to "26.3.0.26-beta"
+    "26.3" to "26.3.0.97"
 )
 val yaclVersion = VersionDefinition(
     "26.3" to "3.9.7+26.3-${mcPlatform.loaderString}",
@@ -114,6 +114,8 @@ val noChatReportsVersion = VersionDefinition(
     "26.1.2-neoforge" to "NeoForge-26.1-v2.19.0",
     "26.2-fabric" to "Fabric-26.2-v2.20.0",
     "26.2-neoforge" to "NeoForge-26.2-v2.20.2",
+    "26.3-fabric" to "Fabric-26.3-v2.21.0",
+    "26.3-neoforge" to "NeoForge-26.3-v2.21.0",
 )
 val javaVersion = VersionDefinition(
     "1.20.1" to "17",
