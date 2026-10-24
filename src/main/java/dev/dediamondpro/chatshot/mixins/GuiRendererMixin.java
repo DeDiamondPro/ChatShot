@@ -15,23 +15,23 @@ import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
 *///?}
 
 //?if >= 26.2 {
-/*import net.minecraft.client.renderer.StagedVertexBuffer;
-*///?}
+import net.minecraft.client.renderer.StagedVertexBuffer;
+//?}
 
 import com.mojang.blaze3d.ProjectionType;
 //?if >=26.3 {
 
-/*import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.renderpearl.api.buffers.GpuBuffer;
 import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.textures.GpuTexture;
 
-*///?} else {
+//?} else {
 
-import com.mojang.blaze3d.buffers.GpuBuffer;
+/*import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.vertex.VertexFormat;
-//?}
+*///?}
 
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -72,22 +72,22 @@ public class GuiRendererMixin implements GuiRendererInterface {
     @Shadow
     private int firstDrawIndexAfterBlur;
     //?if <26.2 {
-    @Final
+    /*@Final
     @Shadow
     private List<GuiRenderer.MeshToDraw> meshesToDraw;
-    //?}
+    *///?}
     @Final
     @Shadow
     GuiRenderState renderState;
     //?if <26.2 {
-    @Final
-    @Shadow
-    private Map<VertexFormat, MappableRingBuffer> vertexBuffers;
-    //?} else {
     /*@Final
     @Shadow
+    private Map<VertexFormat, MappableRingBuffer> vertexBuffers;
+    *///?} else {
+    @Final
+    @Shadow
     private StagedVertexBuffer vertexBuffer;
-    *///?}
+    //?}
 
     //?if >26.1 {
     @Final
@@ -111,20 +111,20 @@ public class GuiRendererMixin implements GuiRendererInterface {
     }
 
     //?if <26.2 {
-    @Shadow
+    /*@Shadow
     private void executeDrawRange(Supplier<String> supplier, RenderTarget arg, GpuBufferSlice gpuBufferSlice, GpuBufferSlice gpuBufferSlice2, GpuBuffer gpuBuffer, VertexFormat.IndexType arg2, int j, int k) {
     }
-    //?} else {
-    /*@Shadow
+    *///?} else {
+    @Shadow
     private void executeDrawRange(Supplier<String> supplier, RenderTarget arg, GpuBufferSlice gpuBufferSlice, int j, int k) {
     }
-    *///?}
+    //?}
 
     @Unique
     void chatShot$draw(GpuBufferSlice gpuBufferSlice, RenderTarget renderTarget) {
         if (!this.draws.isEmpty()) {
             //?if >=26.2 {
-            /*WindowRenderState windowState = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
+            WindowRenderState windowState = Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState;
             this.guiProjection.setupOrtho(1000.0F, 11000.0F, (float) windowState.width / windowState.guiScale, (float) windowState.height / windowState.guiScale, true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
             GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms().writeTransform(new Matrix4f().setTranslation(0.0F, 0.0F, -11000.0F));
@@ -139,8 +139,8 @@ public class GuiRendererMixin implements GuiRendererInterface {
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(depthTexture, 1.0F);
                 this.executeDrawRange(() -> "GUI after blur", renderTarget, dynamicTransforms, this.firstDrawIndexAfterBlur, this.draws.size());
             }
-            *///?} else {
-            //?if >26.1 {
+            //?} else {
+            /*//?if >26.1 {
             WindowRenderState windowState = Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState;
             this.guiProjection.setupOrtho(1000.0F, 11000.0F, (float)windowState.width / (float)windowState.guiScale, (float)windowState.height / (float)windowState.guiScale, true);
             RenderSystem.setProjectionMatrix(this.guiProjectionMatrixBuffer.getBuffer(this.guiProjection), ProjectionType.ORTHOGRAPHIC);
@@ -174,7 +174,7 @@ public class GuiRendererMixin implements GuiRendererInterface {
                 RenderSystem.getDevice().createCommandEncoder().clearDepthTexture(renderTarget.getDepthTexture(), (double) 1.0F);
                 this.executeDrawRange(() -> "GUI after blur", renderTarget, gpuBufferSlice, gpubufferslice, gpubuffer, vertexformat$indextype, this.firstDrawIndexAfterBlur, this.draws.size());
             }
-            //?}
+            *///?}
         }
     }
 
@@ -182,24 +182,24 @@ public class GuiRendererMixin implements GuiRendererInterface {
     public void chatShot$render(GpuBufferSlice gpuBufferSlice, RenderTarget renderTarget) {
         this.prepare();
         //?if >=26.2 {
-        /*this.vertexBuffer.upload();
-        *///?}
+        this.vertexBuffer.upload();
+        //?}
         this.chatShot$draw(gpuBufferSlice, renderTarget);
 
         //?if <26.2 {
-        for (MappableRingBuffer mappableringbuffer : this.vertexBuffers.values()) {
+        /*for (MappableRingBuffer mappableringbuffer : this.vertexBuffers.values()) {
             mappableringbuffer.rotate();
         }
-        //?}
-        //?if >=26.2 {
-        /*this.vertexBuffer.endDraw();
-        this.vertexBuffer.endFrame();
         *///?}
+        //?if >=26.2 {
+        this.vertexBuffer.endDraw();
+        this.vertexBuffer.endFrame();
+        //?}
 
         this.draws.clear();
         //?if <26.2 {
-        this.meshesToDraw.clear();
-         //?}
+        /*this.meshesToDraw.clear();
+         *///?}
         this.renderState.reset();
         this.firstDrawIndexAfterBlur = Integer.MAX_VALUE;
         this.clearUnusedOversizedItemRenderers();
